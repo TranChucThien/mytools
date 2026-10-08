@@ -1,8 +1,16 @@
 ---
-import '../styles/global.css';
+import '@fontsource/be-vietnam-pro/400.css';
+import '@fontsource/be-vietnam-pro/500.css';
+import '@fontsource/be-vietnam-pro/600.css';
+import '@fontsource/be-vietnam-pro/700.css';
+import '@fontsource/be-vietnam-pro/800.css';
+import '../styles/tokens.css';
+import '../styles/base.css';
+import '../styles/components.css';
+import Icon from '../components/Icon.astro';
 import SeoHead from '../components/SeoHead.astro';
 import { t } from '../i18n';
-import { homePath, TOOLS, toolPath } from '../lib/registry';
+import { homePath, otherLang, TOOLS, toolPath } from '../lib/registry';
 import { CATEGORIES, type Lang } from '../lib/types';
 
 interface Props {
@@ -13,14 +21,12 @@ interface Props {
   alternates?: Record<Lang, string>;
   jsonLd?: object[];
   noindex?: boolean;
-  /** Target of the language switch link; defaults to the other language's home. */
-  switchHref?: string;
 }
 
-const { lang, alternates, switchHref, ...seo } = Astro.props;
+const { lang, alternates, ...seo } = Astro.props;
 const s = t(lang);
-const otherLang: Lang = lang === 'vi' ? 'en' : 'vi';
-const switchTo = switchHref ?? alternates?.[otherLang] ?? homePath(otherLang);
+const other = otherLang(lang);
+const switchTo = alternates?.[other] ?? homePath(other);
 ---
 
 <!doctype html>
@@ -32,18 +38,14 @@ const switchTo = switchHref ?? alternates?.[otherLang] ?? homePath(otherLang);
     <header class="site-header">
       <div class="container">
         <a class="brand" href={homePath(lang)}>
-          <svg viewBox="0 0 32 32" aria-hidden="true"
-            ><rect width="32" height="32" rx="8" fill="#0b7a5c"></rect><path
-              d="M9 16.5l4.5 4.5L23 11.5"
-              fill="none"
-              stroke="#fff"
-              stroke-width="3.2"
-              stroke-linecap="round"
-              stroke-linejoin="round"></path></svg
-          >
+          <span class="brand-mark"><Icon name="tool" size={20} /></span>
           <span>{s.siteName}</span>
         </a>
-        <a class="lang-switch" href={switchTo} hreflang={otherLang} lang={otherLang}>{s.langSwitchLabel}</a>
+        <a class="header-link" href={`${homePath(lang)}#tools`}>{s.allTools}</a>
+        <a class="lang-switch" href={switchTo} hreflang={other} lang={other}>
+          <Icon name="language" size={16} />
+          {s.langSwitchLabel}
+        </a>
       </div>
     </header>
 
@@ -76,8 +78,8 @@ const switchTo = switchHref ?? alternates?.[otherLang] ?? homePath(otherLang);
             })
           }
         </div>
-        <p>{s.footerNote}</p>
-        <p>© {new Date().getFullYear()} congcumienphi.id.vn</p>
+        <p class="footer-note">{s.footerNote}</p>
+        <p class="footer-note">© {new Date().getFullYear()} congcumienphi.id.vn</p>
       </div>
     </footer>
   </body>

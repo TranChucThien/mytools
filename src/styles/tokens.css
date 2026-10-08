@@ -1,0 +1,50 @@
+/* Design tokens. See DESIGN.md. */
+:root {
+  --canvas: #eef2ee;
+  --surface: #fcfdfc;
+  --surface-2: #e3e9e3;
+  --ink: #111511;
+  --body: #3f453f;
+  --mute: #5f665f;
+  --line: #d3dbd3;
+  --field-border: #111511;
+  --accent: #0f7a50;
+  --accent-hover: #0b6442;
+  --on-accent: #f4fbf7;
+  --accent-soft: #d6f0e0;
+  --accent-ink: #0a4d33;
+  --danger: #b42318;
+  --header-shadow: 0 1px 0 var(--line), 0 6px 20px rgb(17 21 17 / 5%);
+
+  --r-field: 12px;
+  --r-card: 20px;
+  --r-pill: 999px;
+
+  --font: 'Be Vietnam Pro', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+  --max: 1120px;
+  --prose: 68ch;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --canvas: #0e120f;
+    --surface: #161b17;
+    --surface-2: #1f2620;
+    --ink: #eaeeea;
+    --body: #bfc6bf;
+    --mute: #939b93;
+    --line: #2a322b;
+    --field-border: #7a857b;
+    --accent: #4fd69c;
+    --accent-hover: #74e2b3;
+    --on-accent: #052615;
+    --accent-soft: #133525;
+    --accent-ink: #9be9c5;
+    --danger: #ff8a7a;
+    --header-shadow: 0 1px 0 var(--line);
+    color-scheme: dark;
+  }
+}

@@ -18,9 +18,9 @@ faq:
 
 Pick the question you want to answer and fill in the blanks. The answer appears as you type, together with the formula so you can double-check it:
 
-1. **X% of Y** – e.g. how much is a 30% tip on a $85 bill?
-2. **X is what % of Y** – e.g. what percentage is 18 correct answers out of 25?
-3. **Percentage change** – e.g. rent went from $1,400 to $1,512; what's the percentage increase?
+1. **X% of Y**: e.g. how much is a 30% tip on a $85 bill?
+2. **X is what % of Y**: e.g. what percentage is 18 correct answers out of 25?
+3. **Percentage change**: e.g. rent went from $1,400 to $1,512; what's the percentage increase?
 
 Hit **Copy** to paste the result into a spreadsheet, chat or report.
 

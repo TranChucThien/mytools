@@ -1,0 +1,32 @@
+---
+/**
+ * Inline a Tabler outline icon by name (https://tabler.io/icons) at build time.
+ * Decorative by default; pass `label` to expose it to assistive tech.
+ */
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+interface Props {
+  name: string;
+  size?: number;
+  label?: string;
+  class?: string;
+}
+
+const { name, size = 20, label, class: className } = Astro.props;
+const file = join(process.cwd(), 'node_modules/@tabler/icons/icons/outline', `${name}.svg`);
+let svg: string;
+try {
+  svg = readFileSync(file, 'utf8');
+} catch {
+  throw new Error(`Icon "${name}" not found in @tabler/icons (outline)`);
+}
+const a11y = label ? `role="img" aria-label="${label}"` : 'aria-hidden="true" focusable="false"';
+const html = svg
+  .replace(/<!--[\s\S]*?-->/g, '')
+  .replace(/\s(width|height)="24"/g, ` $1="${size}"`)
+  .replace(/class="[^"]*"/, `class="icon${className ? ` ${className}` : ''}" ${a11y}`)
+  .replace(/\n\s*/g, ' ');
+---
+
+<Fragment set:html={html} />

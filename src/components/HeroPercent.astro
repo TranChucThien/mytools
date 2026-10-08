@@ -1,0 +1,62 @@
+---
+/** Live mini percentage calculator for the home hero (a real tool, not a mock). */
+import { t } from '../i18n';
+import { getTool, toolPath } from '../lib/registry';
+import type { Lang } from '../lib/types';
+import Icon from './Icon.astro';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t(lang);
+const full = getTool('percentage')!;
+---
+
+<div class="hero-tool" data-hero-pct data-lang={lang}>
+  <div class="tool">
+    <div class="hero-tool-head">
+      <h2 class="tool-title">{s.heroToolTitle}</h2>
+      <a href={toolPath(full, lang)}>{s.openFullTool} <Icon name="arrow-right" size={16} /></a>
+    </div>
+    <div class="sentence">
+      <input type="text" inputmode="decimal" aria-label="X (%)" value="15" data-x />
+      <span>{s.pctOf}</span>
+      <input type="text" inputmode="decimal" aria-label="Y" value={lang === 'vi' ? '2.400.000' : '2,400'} data-y />
+    </div>
+    <div class="result" aria-live="polite">
+      <span class="result-value result-big" data-value></span>
+      <span class="result-formula" data-formula></span>
+    </div>
+  </div>
+</div>
+
+<script>
+  import { $ } from '../lib/client';
+  import { formatNumber, parseNumber } from '../lib/number';
+  import type { Lang } from '../lib/types';
+  import { percentOf } from '../tools/percentage/logic';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-hero-pct]')) {
+    const lang = root.dataset.lang as Lang;
+    const xIn = $<HTMLInputElement>(root, '[data-x]');
+    const yIn = $<HTMLInputElement>(root, '[data-y]');
+    const valueEl = $(root, '[data-value]');
+    const formulaEl = $(root, '[data-formula]');
+    const update = () => {
+      const x = parseNumber(xIn.value, lang);
+      const y = parseNumber(yIn.value, lang);
+      if (x === null || y === null) {
+        valueEl.textContent = '-';
+        formulaEl.textContent = '';
+        return;
+      }
+      const r = percentOf(x, y);
+      valueEl.textContent = formatNumber(r, lang);
+      formulaEl.textContent = `${formatNumber(y, lang)} × ${formatNumber(x, lang)} ÷ 100`;
+    };
+    xIn.addEventListener('input', update);
+    yIn.addEventListener('input', update);
+    update();
+  }
+</script>

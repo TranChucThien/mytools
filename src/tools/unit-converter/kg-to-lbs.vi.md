@@ -5,7 +5,7 @@ faq:
   - q: Cách đổi kg sang lbs nhanh bằng cách nhẩm?
     a: Nhân số kg với 2 rồi cộng thêm 10% của kết quả. Ví dụ 60 kg × 2 = 120, cộng 12 được 132 lbs (con số chính xác là 132,28 lbs).
   - q: Lbs là đơn vị gì?
-    a: Lbs (viết tắt của chữ Latin libra) là đơn vị pound – đơn vị đo khối lượng phổ biến ở Mỹ và một phần nước Anh. 1 pound bằng đúng 0,45359237 kg.
+    a: Lbs (viết tắt của chữ Latin libra) là đơn vị pound, đơn vị đo khối lượng phổ biến ở Mỹ và một phần nước Anh. 1 pound bằng đúng 0,45359237 kg.
   - q: Tại sao cân nặng trên hàng hóa Mỹ ghi lbs?
     a: Mỹ dùng hệ đo lường Anh (imperial/US customary) nên cân nặng thường ghi bằng pound. Khi mua hàng order, xem thông số tạ tập gym hay hành lý máy bay quốc tế, bạn sẽ hay phải đổi kg sang lbs.
   - q: Công cụ đổi kg sang lbs có miễn phí không?

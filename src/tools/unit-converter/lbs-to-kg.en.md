@@ -7,7 +7,7 @@ faq:
   - q: How many kg is 100 lbs?
     a: 100 lbs is about 45.36 kg.
   - q: Do I multiply or divide to convert lbs to kg?
-    a: Either multiply by 0.45359237 or divide by 2.20462 – both give the same result.
+    a: Either multiply by 0.45359237 or divide by 2.20462; both give the same result.
   - q: Is this lbs to kg converter free?
     a: Yes, it's completely free, needs no signup and runs entirely in your browser.
 ---

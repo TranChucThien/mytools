@@ -16,6 +16,7 @@ npm test          # Vitest – tool logic, number parsing, registry, JSON-LD
 npm run check     # astro check (TypeScript)
 npm run build     # → dist/
 npm run verify    # SEO checks on dist/ (titles, canonical, hreflang, JSON-LD, sitemap, links)
+npm run preview & npm run e2e   # browser checks (first time: npx playwright install chromium)
 ```
 
 ## Adding a tool

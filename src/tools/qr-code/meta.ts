@@ -3,11 +3,12 @@ import type { ToolMeta } from '../../lib/types';
 export const meta: ToolMeta = {
   id: 'qr-code',
   category: 'generator',
+  icon: 'qrcode',
   component: 'qr-code',
   slug: { vi: 'tao-ma-qr', en: 'qr-code-generator' },
   title: {
-    vi: 'Tạo mã QR online miễn phí – Tạo QR Code từ link, văn bản',
-    en: 'QR Code Generator – Free Online QR Code Maker',
+    vi: 'Tạo mã QR online miễn phí - Tạo QR Code từ link, văn bản',
+    en: 'QR Code Generator - Free Online QR Code Maker',
   },
   description: {
     vi: 'Tạo mã QR online miễn phí từ link, văn bản, số điện thoại. Tùy chỉnh màu, kích thước, tải PNG/SVG. Không cần đăng ký, dữ liệu không rời máy bạn.',

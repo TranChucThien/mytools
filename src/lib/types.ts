@@ -2,8 +2,17 @@ export type Lang = 'vi' | 'en';
 export const LANGS: readonly Lang[] = ['vi', 'en'];
 export const DEFAULT_LANG: Lang = 'vi';
 
-export type Category = 'calculator' | 'converter' | 'random' | 'generator';
-export const CATEGORIES: readonly Category[] = ['calculator', 'converter', 'random', 'generator'];
+export type Category = 'calculator' | 'converter' | 'text' | 'random' | 'generator';
+export const CATEGORIES: readonly Category[] = ['calculator', 'converter', 'text', 'random', 'generator'];
+
+/** Tabler icon per category (https://tabler.io/icons). */
+export const CATEGORY_ICONS: Record<Category, string> = {
+  calculator: 'calculator',
+  converter: 'arrows-exchange',
+  text: 'letter-case',
+  random: 'dice-5',
+  generator: 'sparkles',
+};
 
 export type Localized<T = string> = Record<Lang, T>;
 
@@ -11,6 +20,8 @@ export interface ToolMeta {
   /** Stable internal id, e.g. 'percentage', 'kg-to-lbs'. Also the content file key. */
   id: string;
   category: Category;
+  /** Tabler outline icon name shown on tiles and the page head. */
+  icon: string;
   slug: Localized;
   /** Full <title>. */
   title: Localized;

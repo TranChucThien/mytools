@@ -18,9 +18,9 @@ faq:
 
 Chọn đúng dạng câu hỏi bạn cần trả lời, rồi điền số vào các ô trống. Kết quả hiện ngay khi bạn gõ, kèm theo công thức đã thay số để bạn dễ kiểm tra lại:
 
-1. **Tính X% của Y** – ví dụ: giảm giá 30% của món đồ 450.000đ là bao nhiêu tiền?
-2. **X là bao nhiêu % của Y** – ví dụ: làm đúng 18/25 câu là được bao nhiêu phần trăm?
-3. **Phần trăm tăng/giảm** – ví dụ: giá xăng từ 23.000đ lên 24.150đ là tăng bao nhiêu %?
+1. **Tính X% của Y**: ví dụ: giảm giá 30% của món đồ 450.000đ là bao nhiêu tiền?
+2. **X là bao nhiêu % của Y**: ví dụ: làm đúng 18/25 câu là được bao nhiêu phần trăm?
+3. **Phần trăm tăng/giảm**: ví dụ: giá xăng từ 23.000đ lên 24.150đ là tăng bao nhiêu %?
 
 Bấm **Sao chép** để lấy kết quả dán vào Excel, tin nhắn hay báo cáo.
 

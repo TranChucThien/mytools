@@ -1,5 +1,6 @@
 ---
 import type { FaqItem } from '../lib/types';
+import Icon from './Icon.astro';
 
 interface Props {
   heading: string;
@@ -12,12 +13,17 @@ const { heading, items } = Astro.props;
   items.length > 0 && (
     <section class="faq">
       <h2>{heading}</h2>
-      {items.map((f) => (
-        <details>
-          <summary>{f.q}</summary>
-          <p>{f.a}</p>
-        </details>
-      ))}
+      <div class="faq-list">
+        {items.map((f) => (
+          <details>
+            <summary>
+              {f.q}
+              <Icon name="plus" size={20} />
+            </summary>
+            <p>{f.a}</p>
+          </details>
+        ))}
+      </div>
     </section>
   )
 }

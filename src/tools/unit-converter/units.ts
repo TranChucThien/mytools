@@ -11,6 +11,8 @@ export interface Unit {
  */
 export interface UnitPair {
   id: string;
+  /** Tabler icon name. */
+  icon: string;
   factor: number;
   from: Unit;
   to: Unit;
@@ -22,6 +24,7 @@ export interface UnitPair {
 export const PAIRS: UnitPair[] = [
   {
     id: 'kg-lbs',
+    icon: 'scale',
     // International avoirdupois pound is defined as exactly 0.45359237 kg.
     factor: 1 / 0.45359237,
     from: { symbol: 'kg', name: { vi: 'kilôgam', en: 'kilograms' } },

@@ -14,7 +14,7 @@ faq:
 
 ## How to generate random numbers
 
-1. Enter **Min** and **Max** – the range you want, both ends included.
+1. Enter **Min** and **Max**: the range you want, both ends included.
 2. Enter **How many** numbers you need (1 to 1,000).
 3. Keep **No duplicates** checked if each number may appear only once.
 4. Press **Generate**. Press it again as often as you like for a fresh draw.
@@ -25,7 +25,7 @@ faq:
 - **Picking a student** or a speaker at random by number.
 - **Lottery number picks** for 6/49-style games.
 - **Splitting teams** or setting a random running order.
-- **Games** – replace a die (1 to 6) or a coin flip (1 to 2).
+- **Games**: replace a die (1 to 6) or a coin flip (1 to 2).
 
 ## Why this generator is fair
 

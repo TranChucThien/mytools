@@ -7,6 +7,7 @@ function fake(id: string, over: Partial<ToolMeta> = {}): ToolMeta {
   return {
     id,
     category: 'calculator',
+    icon: 'tool',
     component: 'percentage',
     slug: l(id),
     title: l(id),

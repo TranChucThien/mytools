@@ -3,11 +3,12 @@ import type { ToolMeta } from '../../lib/types';
 export const meta: ToolMeta = {
   id: 'percentage',
   category: 'calculator',
+  icon: 'percentage',
   component: 'percentage',
   slug: { vi: 'tinh-phan-tram', en: 'percentage-calculator' },
   title: {
-    vi: 'Tính phần trăm online – Công cụ tính % miễn phí',
-    en: 'Percentage Calculator – Free Online Percent Calculator',
+    vi: 'Tính phần trăm online - Công cụ tính % miễn phí',
+    en: 'Percentage Calculator - Free Online Percent Calculator',
   },
   description: {
     vi: 'Tính phần trăm online miễn phí: X% của Y, X là bao nhiêu % của Y, phần trăm tăng giảm. Có công thức, kết quả tức thì, không cần đăng ký.',

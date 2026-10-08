@@ -101,7 +101,7 @@ const config = { lang, factor: unitFactor, aSym: a.symbol, bSym: b.symbol, inval
       errorEl.textContent = bad ? invalid : '';
       if (v === null) {
         dst.value = '';
-        valueEl.textContent = '—';
+        valueEl.textContent = '-';
         return;
       }
       const out = source === 'a' ? v * factor : v / factor;

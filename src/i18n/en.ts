@@ -2,17 +2,25 @@ import type { UiStrings } from './vi';
 
 export const en: UiStrings = {
   siteName: 'Free Tools',
-  siteTagline: 'Free online tools – fast, no signup',
-  homeTitle: 'Free Online Tools – No Signup Required | Công Cụ Miễn Phí',
+  siteTagline: 'Free online tools: fast, no signup',
+  homeTitle: 'Free Online Tools - No Signup Required | Công Cụ Miễn Phí',
   homeDescription:
     'Free online tools: percentage calculator, unit converters, random number generator and QR code generator. Runs in your browser, no signup needed.',
   homeH1: 'Free Online Tools',
   homeIntro:
-    'Small tools for everyday tasks – open them and they just work, entirely in your browser, with no account required.',
+    'Small tools for everyday tasks. Open one and it just works, right in your browser, no account needed.',
   home: 'Home',
+  allTools: 'All tools',
+  searchLabel: 'Search tools',
+  searchPlaceholder: 'Search tools, e.g. percent, QR, kg',
+  noResults: 'No matching tools. Try another word.',
+  toolCount: 'tools',
+  heroToolTitle: 'Try it: percentage',
+  openFullTool: 'Open full tool',
   categories: {
     calculator: 'Calculators',
     converter: 'Unit converters',
+    text: 'Text tools',
     random: 'Random tools',
     generator: 'Generators',
   },
@@ -28,7 +36,7 @@ export const en: UiStrings = {
   notFoundTitle: 'Page not found',
   notFoundText: 'The page you are looking for does not exist or has moved.',
   backHome: 'Back to home',
-  footerNote: 'Every tool is free and runs in your browser – your data is never sent anywhere.',
+  footerNote: 'Every tool is free and runs in your browser. Your data is never sent anywhere.',
   errInvalidNumber: 'Please enter a valid number.',
 
   pctMode1: 'X% of Y',
@@ -70,5 +78,5 @@ export const en: UiStrings = {
   qrErrEmpty: 'Enter some content to generate a QR code.',
   qrErrTooLong: 'Content is too long (max 2,000 characters).',
   qrErrRender: 'Could not create a QR code for this content. Try shortening it or lowering error correction.',
-  qrPrivacy: 'QR codes are generated right in your browser – what you type is never sent to any server.',
+  qrPrivacy: 'QR codes are generated right in your browser. What you type is never sent to any server.',
 };

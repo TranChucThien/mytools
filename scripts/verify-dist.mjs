@@ -37,7 +37,6 @@ function pageExists(url) {
 }
 
 const all = (html, re) => [...html.matchAll(re)];
-const attr = (tag, name) => tag.match(new RegExp(`${name}="([^"]*)"`))?.[1];
 
 if (!existsSync(DIST)) {
   console.error('dist/ not found – run `npm run build` first.');

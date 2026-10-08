@@ -1,16 +1,24 @@
 export const vi = {
   siteName: 'Công Cụ Miễn Phí',
-  siteTagline: 'Công cụ online miễn phí – nhanh, không cần đăng ký',
-  homeTitle: 'Công Cụ Miễn Phí – Công cụ online miễn phí, không cần đăng ký',
+  siteTagline: 'Công cụ online miễn phí: nhanh, không cần đăng ký',
+  homeTitle: 'Công Cụ Miễn Phí - Công cụ online miễn phí, không cần đăng ký',
   homeDescription:
     'Bộ công cụ online miễn phí: tính phần trăm, đổi đơn vị, tạo số ngẫu nhiên, tạo mã QR. Chạy ngay trên trình duyệt, không cần đăng ký, không quảng cáo phiền.',
   homeH1: 'Công cụ online miễn phí',
   homeIntro:
-    'Các công cụ nhỏ cho việc hằng ngày – mở ra là dùng được ngay, chạy hoàn toàn trên trình duyệt của bạn, không cần tài khoản.',
+    'Các công cụ nhỏ cho việc hằng ngày. Mở ra là dùng được ngay, chạy trên trình duyệt của bạn, không cần tài khoản.',
   home: 'Trang chủ',
+  allTools: 'Tất cả công cụ',
+  searchLabel: 'Tìm công cụ',
+  searchPlaceholder: 'Tìm công cụ, ví dụ: phần trăm, QR, kg',
+  noResults: 'Không tìm thấy công cụ phù hợp. Thử từ khóa khác nhé.',
+  toolCount: 'công cụ',
+  heroToolTitle: 'Thử ngay: tính phần trăm',
+  openFullTool: 'Mở công cụ đầy đủ',
   categories: {
     calculator: 'Máy tính',
     converter: 'Chuyển đổi đơn vị',
+    text: 'Xử lý văn bản',
     random: 'Ngẫu nhiên',
     generator: 'Tạo mã',
   },
@@ -26,7 +34,7 @@ export const vi = {
   notFoundTitle: 'Không tìm thấy trang',
   notFoundText: 'Trang bạn tìm không tồn tại hoặc đã được chuyển đi.',
   backHome: 'Về trang chủ',
-  footerNote: 'Mọi công cụ đều miễn phí và chạy trên trình duyệt – dữ liệu của bạn không được gửi đi đâu.',
+  footerNote: 'Mọi công cụ đều miễn phí và chạy trên trình duyệt. Dữ liệu của bạn không được gửi đi đâu.',
   errInvalidNumber: 'Vui lòng nhập một số hợp lệ.',
 
   // Percentage
@@ -72,7 +80,7 @@ export const vi = {
   qrErrEmpty: 'Nhập nội dung để tạo mã QR.',
   qrErrTooLong: 'Nội dung quá dài (tối đa 2.000 ký tự).',
   qrErrRender: 'Không tạo được mã QR với nội dung này. Hãy thử rút gọn hoặc giảm mức sửa lỗi.',
-  qrPrivacy: 'Mã QR được tạo ngay trên trình duyệt – nội dung bạn nhập không được gửi lên máy chủ nào.',
+  qrPrivacy: 'Mã QR được tạo ngay trên trình duyệt. Nội dung bạn nhập không được gửi lên máy chủ nào.',
 };
 
 type Widen<T> = { [K in keyof T]: T[K] extends string ? string : Widen<T[K]> };

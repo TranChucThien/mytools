@@ -1,6 +1,7 @@
 ---
 import { toolPath } from '../lib/registry';
 import type { Lang, ToolMeta } from '../lib/types';
+import Icon from './Icon.astro';
 
 interface Props {
   tool: ToolMeta;
@@ -9,9 +10,12 @@ interface Props {
 const { tool, lang } = Astro.props;
 ---
 
-<li>
-  <a class="card" href={toolPath(tool, lang)}>
-    <strong>{tool.name[lang]}</strong>
-    <span>{tool.intro[lang]}</span>
+<li data-tool-tile data-search={`${tool.name.vi} ${tool.name.en} ${tool.slug.vi} ${tool.slug.en} ${tool.h1[lang]}`.toLowerCase()}>
+  <a class="tile" href={toolPath(tool, lang)}>
+    <span class="chip"><Icon name={tool.icon} size={22} /></span>
+    <span class="tile-text">
+      <strong>{tool.name[lang]}</strong>
+      <span>{tool.intro[lang]}</span>
+    </span>
   </a>
 </li>

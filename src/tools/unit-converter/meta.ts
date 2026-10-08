@@ -12,12 +12,13 @@ function pageMeta(pair: UnitPair, direction: Direction): ToolMeta {
   return {
     id: pair.ids[direction],
     category: 'converter',
+    icon: pair.icon,
     component: 'unit-converter',
     props: { pairId: pair.id, direction },
     slug: pair.slug[direction],
     title: {
-      vi: `Đổi ${a.symbol} sang ${b.symbol} (${a.name.vi} sang ${b.name.vi}) – Chuyển đổi online`,
-      en: `${A} to ${B} Converter – Free Online ${cap(a.name.en)} to ${cap(b.name.en)}`,
+      vi: `Đổi ${a.symbol} sang ${b.symbol} (${a.name.vi} sang ${b.name.vi}) - Chuyển đổi online`,
+      en: `${A} to ${B} Converter - Free Online ${cap(a.name.en)} to ${cap(b.name.en)}`,
     },
     description: {
       vi: `Đổi ${a.symbol} sang ${b.symbol} online miễn phí: nhập số ${a.name.vi} để ra ngay số ${b.name.vi}, kèm công thức và bảng quy đổi ${a.symbol} → ${b.symbol} thông dụng.`,

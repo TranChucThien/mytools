@@ -2,6 +2,7 @@
 import AdSlot from '../components/AdSlot.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
 import Faq from '../components/Faq.astro';
+import Icon from '../components/Icon.astro';
 import RelatedTools from '../components/RelatedTools.astro';
 import TrustBadges from '../components/TrustBadges.astro';
 import { t } from '../i18n';
@@ -9,10 +10,7 @@ import { getContent } from '../lib/content';
 import { homePath, toolPath } from '../lib/registry';
 import { breadcrumbLd, faqLd, webApplicationLd } from '../lib/seo';
 import type { Lang, ToolMeta } from '../lib/types';
-import Percentage from '../tools/percentage/Tool.astro';
-import QrCode from '../tools/qr-code/Tool.astro';
-import RandomNumber from '../tools/random-number/Tool.astro';
-import UnitConverter from '../tools/unit-converter/Tool.astro';
+import { TOOL_COMPONENTS } from '../tools/components';
 import BaseLayout from './BaseLayout.astro';
 
 interface Props {
@@ -20,18 +18,11 @@ interface Props {
   lang: Lang;
 }
 
-const COMPONENTS = {
-  percentage: Percentage,
-  'unit-converter': UnitConverter,
-  'random-number': RandomNumber,
-  'qr-code': QrCode,
-} as const;
-
 const { tool, lang } = Astro.props;
 const s = t(lang);
 const content = getContent(tool.id, lang);
 const faq = content.frontmatter.faq ?? [];
-const Tool = COMPONENTS[tool.component];
+const Tool = TOOL_COMPONENTS[tool.component];
 
 const crumbs = [
   { name: s.home, path: homePath(lang) },
@@ -50,19 +41,27 @@ if (faq.length > 0) jsonLd.push(faqLd(faq));
   jsonLd={jsonLd}
 >
   <Breadcrumbs items={crumbs} />
-  <h1>{tool.h1[lang]}</h1>
-  <p class="lead">{tool.intro[lang]}</p>
+  <div class="page-head">
+    <h1><span class="chip chip-lg"><Icon name={tool.icon} size={28} /></span>{tool.h1[lang]}</h1>
+    <p class="lead">{tool.intro[lang]}</p>
+  </div>
 
-  <Tool lang={lang} tool={tool} />
-  <noscript><p class="error">{s.noscript}</p></noscript>
-  <TrustBadges lang={lang} />
+  <div class="tool-layout">
+    <div class="tool-main">
+      <Tool lang={lang} tool={tool} />
+      <noscript><p class="error">{s.noscript}</p></noscript>
+      <TrustBadges lang={lang} />
 
-  <AdSlot name="after-result" />
+      <AdSlot name="after-result" />
 
-  <article class="prose">
-    <content.Content />
-  </article>
+      <article class="prose">
+        <content.Content />
+      </article>
 
-  <Faq heading={s.faqHeading} items={faq} />
-  <RelatedTools tool={tool} lang={lang} heading={s.relatedHeading} />
+      <Faq heading={s.faqHeading} items={faq} />
+    </div>
+    <aside class="tool-aside">
+      <RelatedTools tool={tool} lang={lang} heading={s.relatedHeading} />
+    </aside>
+  </div>
 </BaseLayout>

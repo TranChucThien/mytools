@@ -3,7 +3,9 @@ import { t } from '../i18n';
 import BaseLayout from '../layouts/BaseLayout.astro';
 import { homePath, TOOLS } from '../lib/registry';
 import { websiteLd } from '../lib/seo';
-import { CATEGORIES, type Lang } from '../lib/types';
+import { CATEGORIES, CATEGORY_ICONS, type Lang } from '../lib/types';
+import HeroPercent from './HeroPercent.astro';
+import Icon from './Icon.astro';
 import ToolCard from './ToolCard.astro';
 import TrustBadges from './TrustBadges.astro';
 
@@ -22,24 +24,78 @@ const s = t(lang);
   alternates={{ vi: homePath('vi'), en: homePath('en') }}
   jsonLd={[websiteLd(lang)]}
 >
-  <h1>{s.homeH1}</h1>
-  <p class="lead">{s.homeIntro}</p>
-  <TrustBadges lang={lang} />
-  {
-    CATEGORIES.map((cat) => {
-      const tools = TOOLS.filter((tool) => tool.category === cat);
-      return (
-        tools.length > 0 && (
-          <section>
-            <h2>{s.categories[cat]}</h2>
-            <ul class="cards">
-              {tools.map((tool) => (
-                <ToolCard tool={tool} lang={lang} />
-              ))}
-            </ul>
-          </section>
-        )
-      );
-    })
-  }
+  <section class="hero">
+    <div>
+      <h1>{s.homeH1}</h1>
+      <p class="lead">{s.homeIntro}</p>
+      <div class="search" role="search">
+        <Icon name="search" size={20} />
+        <label class="sr-only" for="tool-search">{s.searchLabel}</label>
+        <input id="tool-search" type="search" placeholder={s.searchPlaceholder} autocomplete="off" data-tool-search />
+      </div>
+      <TrustBadges lang={lang} />
+    </div>
+    <HeroPercent lang={lang} />
+  </section>
+
+  <div class="directory" id="tools">
+    {
+      CATEGORIES.map((cat) => {
+        const tools = TOOLS.filter((tool) => tool.category === cat);
+        return (
+          tools.length > 0 && (
+            <section data-tool-group>
+              <h2>
+                <span class="chip">
+                  <Icon name={CATEGORY_ICONS[cat]} size={22} />
+                </span>
+                {s.categories[cat]}
+                <span class="count">
+                  {tools.length} {s.toolCount}
+                </span>
+              </h2>
+              <ul class="tiles">
+                {tools.map((tool) => (
+                  <ToolCard tool={tool} lang={lang} />
+                ))}
+              </ul>
+            </section>
+          )
+        );
+      })
+    }
+    <p class="empty" data-tool-empty hidden>{s.noResults}</p>
+  </div>
 </BaseLayout>
+
+<script>
+  /** Client-side filter of the tool directory. Matches Vietnamese with or without diacritics. */
+  const fold = (s: string) =>
+    s.normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase();
+
+  const input = document.querySelector<HTMLInputElement>('[data-tool-search]');
+  const empty = document.querySelector<HTMLElement>('[data-tool-empty]');
+  if (input && empty) {
+    const tiles = [...document.querySelectorAll<HTMLElement>('[data-tool-tile]')].map((el) => ({
+      el,
+      text: fold(el.dataset.search ?? '') + ' ' + fold(el.textContent ?? ''),
+    }));
+    const groups = [...document.querySelectorAll<HTMLElement>('[data-tool-group]')];
+    input.addEventListener('input', () => {
+      const words = fold(input.value).split(/\s+/).filter(Boolean);
+      for (const t of tiles) t.el.hidden = !words.every((w) => t.text.includes(w));
+      let any = false;
+      for (const g of groups) {
+        const visible = [...g.querySelectorAll<HTMLElement>('[data-tool-tile]')].some((el) => !el.hidden);
+        g.hidden = !visible;
+        any ||= visible;
+      }
+      empty.hidden = any;
+    });
+    input.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter') return;
+      const first = tiles.find((t) => !t.el.hidden)?.el.querySelector('a');
+      if (first) first.click();
+    });
+  }
+</script>

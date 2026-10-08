@@ -12,6 +12,7 @@ export function absoluteUrl(path: string): string {
 const APP_CATEGORY: Record<ToolMeta['category'], string> = {
   calculator: 'UtilitiesApplication',
   converter: 'UtilitiesApplication',
+  text: 'UtilitiesApplication',
   random: 'UtilitiesApplication',
   generator: 'DesignApplication',
 };

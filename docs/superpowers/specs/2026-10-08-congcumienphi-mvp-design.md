@@ -122,8 +122,8 @@ JSON-LD: tool pages → `WebApplication` (`offers.price: 0`, `inLanguage`,
 `applicationCategory`), `BreadcrumbList`, `FAQPage` when FAQ exists. Home →
 `WebSite`.
 
-Site: `@astrojs/sitemap` with i18n config (hreflang alternates), `robots.txt`
-pointing at `sitemap-index.xml`, bilingual `404.astro`.
+Site: custom `/sitemap.xml` endpoint built from the registry (xhtml:link hreflang alternates; `@astrojs/sitemap` pairs by identical path and cannot match differing VI/EN slugs), `robots.txt`
+pointing at `sitemap.xml`, bilingual `404.astro`.
 
 ## 6. Tool behavior
 

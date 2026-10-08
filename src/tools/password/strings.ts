@@ -1,0 +1,33 @@
+export const S = {
+  vi: {
+    password: 'Mật khẩu',
+    length: 'Độ dài',
+    lower: 'Chữ thường (a-z)',
+    upper: 'Chữ hoa (A-Z)',
+    digits: 'Chữ số (0-9)',
+    symbols: 'Ký tự đặc biệt',
+    excludeSimilar: 'Bỏ ký tự dễ nhầm',
+    generate: 'Tạo mật khẩu mới',
+    strength: 'Độ mạnh',
+    bits: 'bit',
+    levels: { weak: 'Yếu', fair: 'Trung bình', strong: 'Mạnh', veryStrong: 'Rất mạnh' },
+    errSets: 'Chọn ít nhất một loại ký tự.',
+    errLength: 'Độ dài phải từ 4 đến 128 và không nhỏ hơn số loại ký tự đã chọn.',
+  },
+  en: {
+    password: 'Password',
+    length: 'Length',
+    lower: 'Lowercase (a-z)',
+    upper: 'Uppercase (A-Z)',
+    digits: 'Numbers (0-9)',
+    symbols: 'Symbols',
+    excludeSimilar: 'Exclude look-alikes',
+    generate: 'Generate new',
+    strength: 'Strength',
+    bits: 'bits',
+    levels: { weak: 'Weak', fair: 'Fair', strong: 'Strong', veryStrong: 'Very strong' },
+    errSets: 'Select at least one character type.',
+    errLength: 'Length must be 4 to 128 and at least the number of selected types.',
+  },
+};
+export type PasswordStrings = (typeof S)['vi'];

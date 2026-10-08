@@ -1,0 +1,84 @@
+---
+import { t } from '../../i18n';
+import type { Lang, ToolMeta } from '../../lib/types';
+import { S } from './strings';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+const { lang } = Astro.props;
+const s = S[lang];
+const config = { lang, s, copied: t(lang).copied };
+---
+
+<section class="tool" data-age data-config={JSON.stringify(config)}>
+  <div class="grid">
+    <div class="field">
+      <label for="age-birth">{s.birth}</label>
+      <input id="age-birth" type="date" value="2000-01-01" min="1900-01-01" data-birth />
+    </div>
+    <div class="field">
+      <label for="age-ref">{s.ref}</label>
+      <input id="age-ref" type="date" data-ref />
+    </div>
+  </div>
+  <div class="result" aria-live="polite">
+    <span class="result-value" data-value></span>
+  </div>
+  <p class="error" data-error></p>
+  <dl class="stats">
+    <div><dt>{s.totalDays}</dt><dd data-total>-</dd></div>
+    <div><dt>{s.next}</dt><dd data-next>-</dd></div>
+    <div><dt>{s.daysLeft}</dt><dd data-left>-</dd></div>
+    <div><dt>{s.bornOn}</dt><dd data-weekday>-</dd></div>
+  </dl>
+</section>
+
+<script>
+  import { $, readConfig } from '../../lib/client';
+  import { formatNumber } from '../../lib/number';
+  import type { Lang } from '../../lib/types';
+  import { ageBetween, parseIsoDate, type Ymd } from './logic';
+  import type { AgeStrings } from './strings';
+
+  const LOCALE = { vi: 'vi-VN', en: 'en-US' } as const;
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-age]')) {
+    const { lang, s } = readConfig<{ lang: Lang; s: AgeStrings }>(root);
+    const birthIn = $<HTMLInputElement>(root, '[data-birth]');
+    const refIn = $<HTMLInputElement>(root, '[data-ref]');
+    const set = (sel: string, text: string) => ($(root, sel).textContent = text);
+    const unit = (n: number, one: string, many: string) => `${formatNumber(n, lang)} ${n === 1 ? one : many}`;
+    const fmtDate = (d: Ymd) =>
+      new Intl.DateTimeFormat(LOCALE[lang], { dateStyle: 'long', timeZone: 'UTC' }).format(Date.UTC(d.y, d.m - 1, d.d));
+
+    const now = new Date();
+    refIn.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+
+    const update = () => {
+      const birth = parseIsoDate(birthIn.value);
+      const ref = parseIsoDate(refIn.value);
+      const clear = (msg: string) => {
+        set('[data-value]', '-');
+        set('[data-error]', msg);
+        for (const sel of ['[data-total]', '[data-next]', '[data-left]', '[data-weekday]']) set(sel, '-');
+      };
+      if (!birth || !ref) return clear(s.errDate);
+      const age = ageBetween(birth, ref);
+      if (!age) return clear(s.errOrder);
+      set('[data-error]', '');
+      set('[data-value]', [unit(age.years, s.year, s.years), unit(age.months, s.month, s.months), unit(age.days, s.day, s.days)].join(' '));
+      set('[data-total]', unit(age.totalDays, s.day, s.days));
+      set('[data-next]', fmtDate(age.nextBirthday));
+      set('[data-left]', age.daysToBirthday === 0 ? s.today : unit(age.daysToBirthday, s.day, s.days));
+      set(
+        '[data-weekday]',
+        new Intl.DateTimeFormat(LOCALE[lang], { weekday: 'long', timeZone: 'UTC' }).format(Date.UTC(birth.y, birth.m - 1, birth.d)),
+      );
+    };
+    birthIn.addEventListener('input', update);
+    refIn.addEventListener('input', update);
+    update();
+  }
+</script>

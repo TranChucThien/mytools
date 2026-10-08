@@ -42,6 +42,10 @@ describe('validateRegistry', () => {
     const tools = [fake('a')];
     expect(() => validateRegistry(tools, new Set([contentKey('a', 'vi')]))).toThrow(/missing content a\.en/);
   });
+  it('accepts tools with generated content instead of a file', () => {
+    const tools = [fake('a', { faq: { vi: [], en: [] } })];
+    expect(() => validateRegistry(tools, new Set())).not.toThrow();
+  });
   it('rejects slugs that are not lowercase url-safe', () => {
     const tools = [fake('a', { slug: { vi: 'Tính', en: 'a' } })];
     expect(() => validateRegistry(tools, allContent(tools))).toThrow(/invalid vi slug/);

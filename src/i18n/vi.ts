@@ -8,6 +8,7 @@ export const vi = {
   homeIntro:
     'Các công cụ nhỏ cho việc hằng ngày. Mở ra là dùng được ngay, chạy trên trình duyệt của bạn, không cần tài khoản.',
   home: 'Trang chủ',
+  seeAll: 'Xem tất cả',
   allTools: 'Tất cả công cụ',
   searchLabel: 'Tìm công cụ',
   searchPlaceholder: 'Tìm công cụ, ví dụ: phần trăm, QR, kg',

@@ -1,14 +1,14 @@
 import type { ToolMeta } from '../../lib/types';
+import { converterArticle, units } from './article';
 import type { Direction } from './logic';
-import { PAIRS, type Unit, type UnitPair } from './units';
+import { PAIRS, sym, type UnitPair } from './units';
 
-const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 function pageMeta(pair: UnitPair, direction: Direction): ToolMeta {
-  const [a, b]: [Unit, Unit] = direction === 'forward' ? [pair.from, pair.to] : [pair.to, pair.from];
+  const [a, b] = units(pair, direction);
   const other: Direction = direction === 'forward' ? 'reverse' : 'forward';
-  const A = a.symbol.toUpperCase();
-  const B = b.symbol.toUpperCase();
+  const [av, bv] = [sym(a, 'vi'), sym(b, 'vi')];
+  const [ae, be] = [sym(a, 'en'), sym(b, 'en')];
   return {
     id: pair.ids[direction],
     category: 'converter',
@@ -17,20 +17,24 @@ function pageMeta(pair: UnitPair, direction: Direction): ToolMeta {
     props: { pairId: pair.id, direction },
     slug: pair.slug[direction],
     title: {
-      vi: `Đổi ${a.symbol} sang ${b.symbol} (${a.name.vi} sang ${b.name.vi}) - Chuyển đổi online`,
-      en: `${A} to ${B} Converter - Free Online ${cap(a.name.en)} to ${cap(b.name.en)}`,
+      vi: `Đổi ${av} sang ${bv} (${a.name.vi} sang ${b.name.vi}) online`,
+      en: `${a.short} to ${b.short} Converter - Free Online`,
     },
     description: {
-      vi: `Đổi ${a.symbol} sang ${b.symbol} online miễn phí: nhập số ${a.name.vi} để ra ngay số ${b.name.vi}, kèm công thức và bảng quy đổi ${a.symbol} → ${b.symbol} thông dụng.`,
-      en: `Convert ${a.symbol} to ${b.symbol} online for free: enter ${a.name.en} and get ${b.name.en} instantly, with the formula and a handy ${A} to ${B} conversion chart.`,
+      vi: `Đổi ${av} sang ${bv} online miễn phí: nhập số ${a.name.vi} để ra ngay số ${b.name.vi}, kèm công thức và bảng quy đổi ${av} sang ${bv} thông dụng.`,
+      en: `Convert ${ae} to ${be} online for free: enter ${a.name.en} and get ${b.name.en} instantly, with the formula and a handy ${a.short} to ${b.short} chart.`,
     },
-    h1: { vi: `Đổi ${a.symbol} sang ${b.symbol}`, en: `${A} to ${B} Converter` },
-    name: { vi: `Đổi ${a.symbol} sang ${b.symbol}`, en: `${A} to ${B}` },
+    h1: { vi: `Đổi ${av} sang ${bv}`, en: `${a.short} to ${b.short} Converter` },
+    name: { vi: `Đổi ${av} sang ${bv}`, en: `${a.short} to ${b.short}` },
     intro: {
-      vi: `Nhập số ${a.name.vi} (${a.symbol}) hoặc ${b.name.vi} (${b.symbol}), kết quả được quy đổi ngay theo cả hai chiều.`,
-      en: `Enter a value in ${a.name.en} (${a.symbol}) or ${b.name.en} (${b.symbol}) and it converts instantly both ways.`,
+      vi: `Nhập số ${a.name.vi} (${av}) hoặc ${b.name.vi} (${bv}), kết quả được quy đổi ngay theo cả hai chiều.`,
+      en: `Enter a value in ${a.name.en} (${ae}) or ${b.name.en} (${be}) and it converts instantly both ways.`,
     },
     related: [pair.ids[other]],
+    faq: {
+      vi: converterArticle(pair, direction, 'vi').faq,
+      en: converterArticle(pair, direction, 'en').faq,
+    },
   };
 }
 

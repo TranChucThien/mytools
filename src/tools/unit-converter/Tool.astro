@@ -3,8 +3,9 @@ import { t } from '../../i18n';
 import { formatNumber } from '../../lib/number';
 import { getTool, toolPath } from '../../lib/registry';
 import type { Lang, ToolMeta } from '../../lib/types';
+import { formulaText, units } from './article';
 import { conversionTable, type Direction } from './logic';
-import { PAIRS } from './units';
+import { getPair, sym } from './units';
 
 interface Props {
   lang: Lang;
@@ -14,69 +15,83 @@ interface Props {
 const { lang, tool } = Astro.props;
 const s = t(lang);
 const { pairId, direction } = tool.props as { pairId: string; direction: Direction };
-const pair = PAIRS.find((p) => p.id === pairId)!;
-const [a, b] = direction === 'forward' ? [pair.from, pair.to] : [pair.to, pair.from];
+const pair = getPair(pairId);
+const [a, b] = units(pair, direction);
+const [aSym, bSym] = [sym(a, lang), sym(b, lang)];
 const reverse = getTool(pair.ids[direction === 'forward' ? 'reverse' : 'forward'])!;
-const table = conversionTable(pair.factor, direction);
-// Factor expressed as "1 a = k b" for this page's direction.
-const unitFactor = direction === 'forward' ? pair.factor : 1 / pair.factor;
+const table = conversionTable(pair, direction);
+const initial = '1';
 
-const config = { lang, factor: unitFactor, aSym: a.symbol, bSym: b.symbol, invalid: s.errInvalidNumber, copied: s.copied };
+const config = {
+  lang,
+  factor: pair.factor,
+  offset: pair.offset ?? 0,
+  direction,
+  aSym,
+  bSym,
+  invalid: s.errInvalidNumber,
+  copied: s.copied,
+};
 ---
 
 <section class="tool" data-conv data-config={JSON.stringify(config)}>
   <div class="grid">
     <div class="field">
-      <label for="conv-a">{a.name[lang]} ({a.symbol})</label>
-      <input id="conv-a" type="text" inputmode="decimal" value="1" data-a />
+      <label for="conv-a">{a.name[lang]} ({aSym})</label>
+      <input id="conv-a" type="text" inputmode="decimal" value={initial} data-a />
     </div>
     <div class="field">
-      <label for="conv-b">{b.name[lang]} ({b.symbol})</label>
+      <label for="conv-b">{b.name[lang]} ({bSym})</label>
       <input id="conv-b" type="text" inputmode="decimal" data-b />
     </div>
   </div>
   <div class="result" aria-live="polite">
     <span class="result-value" data-value></span>
     <button type="button" class="btn btn-secondary btn-sm" data-copy>{s.copy}</button>
-    <span class="result-formula">
-      {s.formula}: {b.symbol} = {a.symbol} × {formatNumber(unitFactor, lang, 8)}
-    </span>
+    <span class="result-formula">{s.formula}: {formulaText(pair, direction, lang)}</span>
   </div>
   <p class="error" data-error></p>
   <div class="actions">
-    <a class="btn btn-secondary" href={toolPath(reverse, lang)}>⇄ {s.convSwap}: {reverse.name[lang]}</a>
+    <a class="btn btn-secondary" href={toolPath(reverse, lang)}>{s.convSwap}: {reverse.name[lang]}</a>
   </div>
 </section>
 
 <section class="prose">
-  <h2>{s.convTable} {a.symbol} → {b.symbol}</h2>
-  <table>
-    <thead>
-      <tr><th scope="col">{a.name[lang]} ({a.symbol})</th><th scope="col">{b.name[lang]} ({b.symbol})</th></tr>
-    </thead>
-    <tbody>
-      {
-        table.map((row) => (
-          <tr>
-            <td>{formatNumber(row.input, lang)} {a.symbol}</td>
-            <td>
-              {formatNumber(row.output, lang, 3)} {b.symbol}
-            </td>
-          </tr>
-        ))
-      }
-    </tbody>
-  </table>
+  <h2>{s.convTable} {aSym} → {bSym}</h2>
+  <div class="table-scroll">
+    <table>
+      <thead>
+        <tr><th scope="col">{a.name[lang]} ({aSym})</th><th scope="col">{b.name[lang]} ({bSym})</th></tr>
+      </thead>
+      <tbody>
+        {
+          table.map((row) => (
+            <tr>
+              <td>
+                {formatNumber(row.input, lang)} {aSym}
+              </td>
+              <td>
+                {formatNumber(row.output, lang, Math.abs(row.output) < 0.1 ? 6 : 3)} {bSym}
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
 </section>
 
 <script>
   import { $, readConfig, setError, setupCopy } from '../../lib/client';
   import { formatNumber, parseNumber } from '../../lib/number';
   import type { Lang } from '../../lib/types';
+  import { convert, type Direction } from './logic';
 
   interface Config {
     lang: Lang;
     factor: number;
+    offset: number;
+    direction: Direction;
     aSym: string;
     bSym: string;
     invalid: string;
@@ -84,7 +99,9 @@ const config = { lang, factor: unitFactor, aSym: a.symbol, bSym: b.symbol, inval
   }
 
   for (const root of document.querySelectorAll<HTMLElement>('[data-conv]')) {
-    const { lang, factor, aSym, bSym, invalid, copied } = readConfig<Config>(root);
+    const { lang, factor, offset, direction, aSym, bSym, invalid, copied } = readConfig<Config>(root);
+    const pair = { factor, offset };
+    const back: Direction = direction === 'forward' ? 'reverse' : 'forward';
     const aIn = $<HTMLInputElement>(root, '[data-a]');
     const bIn = $<HTMLInputElement>(root, '[data-b]');
     const valueEl = $(root, '[data-value]');
@@ -104,7 +121,7 @@ const config = { lang, factor: unitFactor, aSym: a.symbol, bSym: b.symbol, inval
         valueEl.textContent = '-';
         return;
       }
-      const out = source === 'a' ? v * factor : v / factor;
+      const out = convert(v, pair, source === 'a' ? direction : back);
       dst.value = formatNumber(out, lang);
       const [av, bv] = source === 'a' ? [v, out] : [out, v];
       valueEl.textContent = `${formatNumber(av, lang)} ${aSym} = ${formatNumber(bv, lang)} ${bSym}`;

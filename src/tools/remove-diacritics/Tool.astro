@@ -1,0 +1,42 @@
+---
+import { t } from '../../i18n';
+import type { Lang, ToolMeta } from '../../lib/types';
+import { S } from './strings';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+const { lang } = Astro.props;
+const s = S[lang];
+---
+
+<section class="tool" data-unaccent data-copied={t(lang).copied}>
+  <div class="stack">
+    <div class="field">
+      <label for="ud-in">{s.input}</label>
+      <textarea id="ud-in" rows="5" data-in>{s.example}</textarea>
+    </div>
+    <div class="field">
+      <label for="ud-out">{s.output}</label>
+      <textarea id="ud-out" rows="5" class="output" readonly data-out></textarea>
+    </div>
+  </div>
+  <div class="actions">
+    <button type="button" class="btn" data-copy>{t(lang).copy}</button>
+  </div>
+</section>
+
+<script>
+  import { $, setupCopy } from '../../lib/client';
+  import { removeDiacritics } from '../../lib/text';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-unaccent]')) {
+    const input = $<HTMLTextAreaElement>(root, '[data-in]');
+    const output = $<HTMLTextAreaElement>(root, '[data-out]');
+    const update = () => (output.value = removeDiacritics(input.value));
+    input.addEventListener('input', update);
+    setupCopy($<HTMLButtonElement>(root, '[data-copy]'), () => output.value, root.dataset.copied ?? '');
+    update();
+  }
+</script>

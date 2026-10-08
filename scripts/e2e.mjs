@@ -103,6 +103,106 @@ for (const width of [390, 1280]) {
   if (SHOTS) await p.screenshot({ path: `${SHOTS}/home-${width}.png`, fullPage: true });
   await p.close();
 }
+
+// ---------- Wave 1 tools (desktop) ----------
+{
+  const W = '@1280';
+  const val = (p, sel) => p.locator(sel).first().innerText();
+  let p = await page(1280, '/tinh-tuoi/');
+  await p.locator('[data-birth]').fill('1995-08-15');
+  await p.locator('[data-ref]').fill('2026-10-08');
+  ok(`age ymd ${W}`, (await val(p, '[data-age] [data-value]')) === '31 năm 1 tháng 23 ngày', await val(p, '[data-age] [data-value]'));
+  ok(`age total ${W}`, (await val(p, '[data-total]')) === '11.377 ngày');
+  await p.close();
+
+  p = await page(1280, '/en/discount-calculator/');
+  await p.locator('[data-price]').fill('1,000,000');
+  await p.locator('[data-extra]').fill('20');
+  ok(`discount stacked ${W}`, (await val(p, '[data-discount] [data-value]')) === '560,000' && (await val(p, '[data-discount] [data-total]')) === '44%');
+  await p.close();
+
+  p = await page(1280, '/tinh-bmi/');
+  await p.locator('[data-weight]').fill('72');
+  await p.locator('[data-height]').fill('170');
+  ok(`bmi asian ${W}`, (await val(p, '[data-bmi] [data-value]')) === '24,9' && (await val(p, '[data-class]')) === 'Thừa cân');
+  await p.locator('label:has([value="who"])').click();
+  ok(`bmi who ${W}`, (await val(p, '[data-class]')) === 'Bình thường');
+  await p.close();
+
+  p = await page(1280, '/tinh-vat/');
+  ok(`vat add ${W}`, (await val(p, '[data-vat] [data-value]')) === '1.100.000');
+  await p.locator('label:has([value="remove"])').click();
+  ok(`vat remove ${W}`, (await val(p, '[data-vat] [data-value]')) === '909.090,91', await val(p, '[data-vat] [data-value]'));
+  await p.close();
+
+  p = await page(1280, '/dem-tu/');
+  await p.locator('[data-text]').fill('Hôm nay trời đẹp. Đi Đà Lạt thôi!');
+  ok(`word count ${W}`, (await val(p, '[data-words-n]')) === '8' && (await val(p, '[data-sentences]')) === '2');
+  await p.close();
+
+  p = await page(1280, '/bo-dau-tieng-viet/');
+  ok(`unaccent ${W}`, (await p.locator('[data-out]').inputValue()) === 'Tieng Viet co dau that dep, nhung doi khi can bo dau.');
+  await p.close();
+
+  p = await page(1280, '/en/case-converter/');
+  await p.getByRole('button', { name: 'Title Case' }).click();
+  ok(`title case ${W}`, (await p.locator('[data-out]').inputValue()) === 'The Quick Brown Fox. It Jumps Over Paris!');
+  await p.close();
+
+  p = await page(1280, '/tao-slug/');
+  ok(`slug ${W}`, (await val(p, '[data-slug] [data-out]')) === 'huong-dan-nau-pho-bo-ha-noi');
+  await p.close();
+
+  p = await page(1280, '/tung-dong-xu/');
+  for (let i = 0; i < 10; i++) await p.locator('[data-flip]').click();
+  ok(`coin tally ${W}`, (await val(p, '[data-coin] [data-total]')) === '10');
+  await p.close();
+
+  p = await page(1280, '/boc-tham-ngau-nhien/');
+  await p.locator('[data-count]').fill('2');
+  await p.locator('[data-remove]').check();
+  await p.locator('[data-pick]').click();
+  ok(`picker ${W}`, (await p.locator('[data-winners] li').count()) === 2 && (await p.locator('[data-list]').inputValue()).split('\n').length === 4);
+  await p.close();
+
+  p = await page(1280, '/en/password-generator/');
+  ok(`password default ${W}`, (await val(p, '[data-password] [data-out]')).length === 16);
+  await p.locator('[data-length]').fill('32');
+  ok(`password length ${W}`, (await val(p, '[data-password] [data-out]')).length === 32);
+  for (const k of ['lower', 'upper', 'digits', 'symbols']) await p.locator(`[data-opt="${k}"]`).uncheck();
+  ok(`password no sets ${W}`, (await val(p, '[data-password] [data-error]')).length > 0);
+  await p.close();
+
+  p = await page(1280, '/en/celsius-to-fahrenheit/');
+  await p.locator('[data-a]').fill('37');
+  ok(`c→f ${W}`, (await p.locator('[data-b]').inputValue()) === '98.6');
+  await p.close();
+  p = await page(1280, '/doi-do-f-sang-do-c/');
+  await p.locator('[data-a]').fill('-40');
+  ok(`f→c negative ${W}`, (await p.locator('[data-b]').inputValue()) === '-40');
+  await p.close();
+}
+
+// ---------- Sweep every sitemap page on mobile ----------
+{
+  const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });
+  const p = await ctx.newPage();
+  let current = '';
+  p.on('console', (m) => m.type() === 'error' && errors.push(`${current}@390: ${m.text()}`));
+  p.on('pageerror', (e) => errors.push(`${current}@390: ${e.message}`));
+  const xml = await (await fetch(BASE + '/sitemap.xml')).text();
+  const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]).pathname);
+  const base = new URL(BASE).pathname.replace(/\/$/, '');
+  let overflow = [];
+  for (const loc of locs) {
+    current = loc;
+    await p.goto(new URL(BASE).origin + loc, { waitUntil: 'load' });
+    if (await p.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)) overflow.push(loc);
+  }
+  ok(`sweep ${locs.length} pages (base ${base || '/'})`, locs.length > 0 && overflow.length === 0, overflow.join(', '));
+  await ctx.close();
+}
+
 await b.close();
 console.log(results.join('\n'));
 console.log(errors.length ? 'CONSOLE ERRORS:\n' + errors.join('\n') : 'No console errors');

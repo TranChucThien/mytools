@@ -1,12 +1,39 @@
+import { meta as age } from '../tools/age/meta';
+import { meta as bmi } from '../tools/bmi/meta';
+import { meta as caseConverter } from '../tools/case-converter/meta';
+import { meta as coinFlip } from '../tools/coin-flip/meta';
+import { meta as discount } from '../tools/discount/meta';
+import { meta as namePicker } from '../tools/name-picker/meta';
+import { meta as password } from '../tools/password/meta';
 import { meta as percentage } from '../tools/percentage/meta';
 import { meta as qrCode } from '../tools/qr-code/meta';
 import { meta as randomNumber } from '../tools/random-number/meta';
+import { meta as removeDiacritics } from '../tools/remove-diacritics/meta';
+import { meta as slug } from '../tools/slug/meta';
 import { metas as converters } from '../tools/unit-converter/meta';
+import { meta as vat } from '../tools/vat/meta';
+import { meta as wordCounter } from '../tools/word-counter/meta';
 import { withBase } from './paths';
 import { LANGS, type Lang, type ToolMeta } from './types';
 
 /** Every tool page on the site. Add a tool by importing its meta here. */
-export const TOOLS: ToolMeta[] = [percentage, ...converters, randomNumber, qrCode];
+export const TOOLS: ToolMeta[] = [
+  percentage,
+  age,
+  discount,
+  bmi,
+  vat,
+  ...converters,
+  wordCounter,
+  removeDiacritics,
+  caseConverter,
+  slug,
+  randomNumber,
+  namePicker,
+  coinFlip,
+  qrCode,
+  password,
+];
 
 export function getTool(id: string, tools: ToolMeta[] = TOOLS): ToolMeta | undefined {
   return tools.find((t) => t.id === id);
@@ -57,7 +84,7 @@ export function validateRegistry(tools: ToolMeta[], contentKeys: Set<string>): v
     }
     for (const lang of LANGS) {
       const key = contentKey(t.id, lang);
-      if (!contentKeys.has(key)) throw new Error(`Registry: missing content ${key} (expected file ${key}.md)`);
+      if (!contentKeys.has(key) && !t.faq) throw new Error(`Registry: missing content ${key} (expected file ${key}.md)`);
     }
   }
 }

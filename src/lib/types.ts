@@ -16,6 +16,23 @@ export const CATEGORY_ICONS: Record<Category, string> = {
 
 export type Localized<T = string> = Record<Lang, T>;
 
+export type ToolComponent =
+  | 'percentage'
+  | 'unit-converter'
+  | 'random-number'
+  | 'qr-code'
+  | 'age'
+  | 'discount'
+  | 'bmi'
+  | 'vat'
+  | 'word-counter'
+  | 'remove-diacritics'
+  | 'case-converter'
+  | 'slug'
+  | 'coin-flip'
+  | 'name-picker'
+  | 'password';
+
 export interface ToolMeta {
   /** Stable internal id, e.g. 'percentage', 'kg-to-lbs'. Also the content file key. */
   id: string;
@@ -35,8 +52,10 @@ export interface ToolMeta {
   /** Related tool ids, most relevant first. */
   related: string[];
   /** Key into the page's component map. */
-  component: 'percentage' | 'unit-converter' | 'random-number' | 'qr-code';
+  component: ToolComponent;
   props?: Record<string, unknown>;
+  /** Generated FAQ for tools without a hand-written content file (e.g. unit converters). */
+  faq?: Localized<FaqItem[]>;
 }
 
 export interface FaqItem {

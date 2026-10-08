@@ -1,0 +1,52 @@
+---
+import type { Lang, ToolMeta } from '../../lib/types';
+import { S } from './strings';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+const { lang } = Astro.props;
+const s = S[lang];
+---
+
+<section class="tool" data-words data-config={JSON.stringify({ lang, s })}>
+  <div class="field">
+    <label for="wc-text">{s.text}</label>
+    <textarea id="wc-text" rows="8" placeholder={s.placeholder} data-text></textarea>
+  </div>
+  <dl class="stats" aria-live="polite">
+    <div><dt>{s.words}</dt><dd data-words-n>0</dd></div>
+    <div><dt>{s.characters}</dt><dd data-chars>0</dd></div>
+    <div><dt>{s.noSpaces}</dt><dd data-nospace>0</dd></div>
+    <div><dt>{s.sentences}</dt><dd data-sentences>0</dd></div>
+    <div><dt>{s.paragraphs}</dt><dd data-paragraphs>0</dd></div>
+    <div><dt>{s.reading}</dt><dd data-reading>0</dd></div>
+  </dl>
+</section>
+
+<script>
+  import { $, readConfig } from '../../lib/client';
+  import { formatNumber } from '../../lib/number';
+  import type { Lang } from '../../lib/types';
+  import { countText } from './logic';
+  import type { WordStrings } from './strings';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-words]')) {
+    const { lang, s } = readConfig<{ lang: Lang; s: WordStrings }>(root);
+    const text = $<HTMLTextAreaElement>(root, '[data-text]');
+    const set = (sel: string, n: number) => ($(root, sel).textContent = formatNumber(n, lang));
+    const update = () => {
+      const r = countText(text.value);
+      set('[data-words-n]', r.words);
+      set('[data-chars]', r.characters);
+      set('[data-nospace]', r.charactersNoSpaces);
+      set('[data-sentences]', r.sentences);
+      set('[data-paragraphs]', r.paragraphs);
+      $(root, '[data-reading]').textContent =
+        r.words === 0 ? '0' : r.readingMinutes < 1 ? s.underMinute : `${formatNumber(Math.ceil(r.readingMinutes), lang)} ${s.minutes}`;
+    };
+    text.addEventListener('input', update);
+    update();
+  }
+</script>

@@ -1,0 +1,88 @@
+---
+import { t } from '../../i18n';
+import type { Lang, ToolMeta } from '../../lib/types';
+import { MAX_LENGTH, MIN_LENGTH } from './logic';
+import { S } from './strings';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+const { lang } = Astro.props;
+const s = S[lang];
+const options = [
+  ['lower', s.lower, true],
+  ['upper', s.upper, true],
+  ['digits', s.digits, true],
+  ['symbols', s.symbols, true],
+  ['excludeSimilar', s.excludeSimilar, false],
+] as const;
+---
+
+<section class="tool" data-password data-config={JSON.stringify({ lang, s, copied: t(lang).copied })}>
+  <span class="label">{s.password}</span>
+  <div class="result" aria-live="polite" style="margin-top:6px">
+    <span class="result-value mono-big" data-out></span>
+    <button type="button" class="btn btn-secondary btn-sm" data-copy>{t(lang).copy}</button>
+    <span class="result-formula" data-strength></span>
+  </div>
+  <div class="field" style="margin-top:16px">
+    <label for="pw-len">{s.length}: <span data-len-label>16</span></label>
+    <input id="pw-len" type="range" min={MIN_LENGTH} max={MAX_LENGTH} value="16" data-length />
+  </div>
+  <div class="grid" style="margin-top:8px">
+    {
+      options.map(([key, label, on]) => (
+        <label class="check">
+          <input type="checkbox" checked={on} data-opt={key} /> {label}
+        </label>
+      ))
+    }
+  </div>
+  <p class="error" data-error></p>
+  <div class="actions">
+    <button type="button" class="btn" data-generate>{s.generate}</button>
+  </div>
+</section>
+
+<script>
+  import { $, readConfig, setupCopy } from '../../lib/client';
+  import { formatNumber } from '../../lib/number';
+  import type { Lang } from '../../lib/types';
+  import { generatePassword, strength, type PasswordOptions } from './logic';
+  import type { PasswordStrings } from './strings';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-password]')) {
+    const { lang, s, copied } = readConfig<{ lang: Lang; s: PasswordStrings; copied: string }>(root);
+    const lengthIn = $<HTMLInputElement>(root, '[data-length]');
+    const out = $(root, '[data-out]');
+    const opt = (k: string) => root.querySelector<HTMLInputElement>(`[data-opt="${k}"]`)!.checked;
+
+    const generate = () => {
+      $(root, '[data-len-label]').textContent = lengthIn.value;
+      const o: PasswordOptions = {
+        length: Number(lengthIn.value),
+        lower: opt('lower'),
+        upper: opt('upper'),
+        digits: opt('digits'),
+        symbols: opt('symbols'),
+        excludeSimilar: opt('excludeSimilar'),
+      };
+      const r = generatePassword(o);
+      if (!r.ok) {
+        out.textContent = '-';
+        $(root, '[data-strength]').textContent = '';
+        $(root, '[data-error]').textContent = r.error === 'noSets' ? s.errSets : s.errLength;
+        return;
+      }
+      $(root, '[data-error]').textContent = '';
+      out.textContent = r.password;
+      $(root, '[data-strength]').textContent =
+        `${s.strength}: ${s.levels[strength(r.bits)]} (${formatNumber(r.bits, lang, 0)} ${s.bits})`;
+    };
+    root.addEventListener('input', generate);
+    $(root, '[data-generate]').addEventListener('click', generate);
+    setupCopy($<HTMLButtonElement>(root, '[data-copy]'), () => (out.textContent === '-' ? '' : (out.textContent ?? '')), copied);
+    generate();
+  }
+</script>

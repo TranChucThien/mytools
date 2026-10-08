@@ -1,0 +1,102 @@
+---
+import { t } from '../../i18n';
+import type { Lang, ToolMeta } from '../../lib/types';
+import { S } from './strings';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+const { lang } = Astro.props;
+const s = S[lang];
+const config = { lang, invalid: t(lang).errInvalidNumber, copied: t(lang).copied };
+---
+
+<section class="tool" data-vat data-config={JSON.stringify(config)}>
+  <div class="stack">
+    <span class="label" id="vat-mode">{s.mode}</span>
+    <div class="segmented" role="radiogroup" aria-labelledby="vat-mode">
+      <label><input type="radio" name="vat-mode" value="add" checked data-mode /><span>{s.add}</span></label>
+      <label><input type="radio" name="vat-mode" value="remove" data-mode /><span>{s.remove}</span></label>
+    </div>
+  </div>
+  <div class="grid" style="margin-top:16px">
+    <div class="field">
+      <label for="vat-amount">{s.amount}</label>
+      <input id="vat-amount" type="text" inputmode="decimal" value={s.example} data-amount />
+    </div>
+    <div class="field">
+      <span class="label" id="vat-rate">{s.rate}</span>
+      <div class="segmented" role="radiogroup" aria-labelledby="vat-rate">
+        {['5', '8', '10'].map((r) => (
+          <label><input type="radio" name="vat-rate" value={r} checked={r === '10'} data-rate /><span>{r}%</span></label>
+        ))}
+        <label><input type="radio" name="vat-rate" value="custom" data-rate /><span>{s.custom}</span></label>
+      </div>
+    </div>
+    <div class="field" data-custom-wrap hidden>
+      <label for="vat-custom">{s.customRate}</label>
+      <input id="vat-custom" type="text" inputmode="decimal" value="20" data-custom />
+    </div>
+  </div>
+  <div class="result" aria-live="polite">
+    <span class="result-value" data-value></span>
+    <button type="button" class="btn btn-secondary btn-sm" data-copy>{t(lang).copy}</button>
+    <span class="result-formula" data-formula></span>
+  </div>
+  <p class="error" data-error></p>
+  <dl class="stats">
+    <div><dt>{s.vat}</dt><dd data-vat-amount>-</dd></div>
+    <div><dt>{s.net}</dt><dd data-net>-</dd></div>
+    <div><dt>{s.gross}</dt><dd data-gross>-</dd></div>
+  </dl>
+</section>
+
+<script>
+  import { $, readConfig, setError, setupCopy } from '../../lib/client';
+  import { formatNumber, parseNumber } from '../../lib/number';
+  import type { Lang } from '../../lib/types';
+  import { addVat, removeVat } from './logic';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-vat]')) {
+    const { lang, invalid, copied } = readConfig<{ lang: Lang; invalid: string; copied: string }>(root);
+    const amountIn = $<HTMLInputElement>(root, '[data-amount]');
+    const customIn = $<HTMLInputElement>(root, '[data-custom]');
+    const customWrap = $(root, '[data-custom-wrap]');
+    const set = (sel: string, text: string) => ($(root, sel).textContent = text);
+    const f = (n: number) => formatNumber(n, lang, 2);
+
+    const update = () => {
+      const mode = root.querySelector<HTMLInputElement>('[data-mode]:checked')!.value;
+      const rateKey = root.querySelector<HTMLInputElement>('[data-rate]:checked')!.value;
+      customWrap.hidden = rateKey !== 'custom';
+      const rate = rateKey === 'custom' ? parseNumber(customIn.value, lang) : Number(rateKey);
+      const amount = parseNumber(amountIn.value, lang);
+      setError(amountIn, amountIn.value.trim() !== '' && amount === null);
+      setError(customIn, rateKey === 'custom' && rate === null);
+      const r = amount !== null && rate !== null ? (mode === 'add' ? addVat(amount, rate) : removeVat(amount, rate)) : null;
+      if (!r) {
+        for (const sel of ['[data-value]', '[data-vat-amount]', '[data-net]', '[data-gross]']) set(sel, '-');
+        set('[data-formula]', '');
+        set('[data-error]', amountIn.value.trim() ? invalid : '');
+        return;
+      }
+      set('[data-error]', '');
+      set('[data-vat-amount]', f(r.vat));
+      set('[data-net]', f(r.net));
+      set('[data-gross]', f(r.gross));
+      const pct = `${formatNumber(rate!, lang)}%`;
+      if (mode === 'add') {
+        set('[data-value]', f(r.gross));
+        set('[data-formula]', `${f(r.net)} × (1 + ${pct}) = ${f(r.gross)}`);
+      } else {
+        set('[data-value]', f(r.net));
+        set('[data-formula]', `${f(r.gross)} ÷ (1 + ${pct}) = ${f(r.net)}`);
+      }
+    };
+    root.addEventListener('input', update);
+    root.addEventListener('change', update);
+    setupCopy($<HTMLButtonElement>(root, '[data-copy]'), () => $(root, '[data-value]').textContent ?? '', copied);
+    update();
+  }
+</script>

@@ -1,0 +1,84 @@
+---
+import { t } from '../../i18n';
+import type { Lang, ToolMeta } from '../../lib/types';
+import { S } from './strings';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+const { lang } = Astro.props;
+const s = S[lang];
+const config = { lang, s, invalid: t(lang).errInvalidNumber, copied: t(lang).copied };
+---
+
+<section class="tool" data-discount data-config={JSON.stringify(config)}>
+  <div class="grid">
+    <div class="field">
+      <label for="dc-price">{s.price}</label>
+      <input id="dc-price" type="text" inputmode="decimal" value={s.example.price} data-price />
+    </div>
+    <div class="field">
+      <label for="dc-pct">{s.pct}</label>
+      <input id="dc-pct" type="text" inputmode="decimal" value={s.example.pct} data-pct />
+    </div>
+    <div class="field">
+      <label for="dc-extra">{s.extra}</label>
+      <input id="dc-extra" type="text" inputmode="decimal" placeholder="0" data-extra />
+    </div>
+  </div>
+  <div class="result" aria-live="polite">
+    <span class="result-value result-big" data-value></span>
+    <button type="button" class="btn btn-secondary btn-sm" data-copy>{t(lang).copy}</button>
+    <span class="result-formula">{s.final}</span>
+  </div>
+  <p class="error" data-error></p>
+  <dl class="stats">
+    <div><dt>{s.saved}</dt><dd data-saved>-</dd></div>
+    <div><dt>{s.total}</dt><dd data-total>-</dd></div>
+  </dl>
+</section>
+
+<script>
+  import { $, readConfig, setError, setupCopy } from '../../lib/client';
+  import { formatNumber, parseNumber } from '../../lib/number';
+  import type { Lang } from '../../lib/types';
+  import { applyDiscount } from './logic';
+  import type { DiscountStrings } from './strings';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-discount]')) {
+    const { lang, s, invalid, copied } = readConfig<{ lang: Lang; s: DiscountStrings; invalid: string; copied: string }>(root);
+    const [priceIn, pctIn, extraIn] = ['[data-price]', '[data-pct]', '[data-extra]'].map((q) => $<HTMLInputElement>(root, q)) as [
+      HTMLInputElement,
+      HTMLInputElement,
+      HTMLInputElement,
+    ];
+    const set = (sel: string, text: string) => ($(root, sel).textContent = text);
+    const f = (n: number) => formatNumber(n, lang, 2);
+
+    const update = () => {
+      const price = parseNumber(priceIn.value, lang);
+      const pct = parseNumber(pctIn.value, lang);
+      const extra = extraIn.value.trim() === '' ? 0 : parseNumber(extraIn.value, lang);
+      setError(priceIn, priceIn.value.trim() !== '' && price === null);
+      setError(pctIn, pctIn.value.trim() !== '' && pct === null);
+      setError(extraIn, extra === null);
+      const r = price !== null && pct !== null && extra !== null ? applyDiscount(price, pct, extra) : null;
+      if (!r) {
+        set('[data-value]', '-');
+        set('[data-saved]', '-');
+        set('[data-total]', '-');
+        const typed = priceIn.value.trim() && pctIn.value.trim();
+        set('[data-error]', !typed ? '' : price === null || pct === null || extra === null ? invalid : s.errPct);
+        return;
+      }
+      set('[data-error]', '');
+      set('[data-value]', f(r.final));
+      set('[data-saved]', f(r.saved));
+      set('[data-total]', `${formatNumber(r.totalPercent, lang, 2)}%`);
+    };
+    for (const el of [priceIn, pctIn, extraIn]) el.addEventListener('input', update);
+    setupCopy($<HTMLButtonElement>(root, '[data-copy]'), () => $(root, '[data-value]').textContent ?? '', copied);
+    update();
+  }
+</script>

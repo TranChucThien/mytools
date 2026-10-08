@@ -493,6 +493,25 @@ input[type='color'] {
 }
 .table-scroll {
   overflow-x: auto;
+  margin: 1em 0;
+}
+.table-scroll table {
+  margin: 0;
+}
+.table-scroll th,
+.table-scroll td {
+  white-space: nowrap;
+}
+
+@media (max-width: 767px) {
+  /* Block display lets wide tables scroll inside the column instead of overflowing on phones. */
+  .prose table {
+    display: block;
+    width: max-content;
+    min-width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+  }
 }
 
 /* ---------- FAQ ---------- */
@@ -721,6 +740,9 @@ input[type='color'] {
 .footer-cols a:hover {
   color: var(--accent);
 }
+.footer-more {
+  font-weight: 600;
+}
 .footer-note {
   color: var(--mute);
   margin: 0 0 4px;
@@ -729,4 +751,97 @@ input[type='color'] {
 /* Reserved ad position: hidden until ads are enabled. */
 .ad-slot:empty {
   display: none;
+}
+
+/* ---------- Stats (multi-value results) ---------- */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 10px;
+  margin: 16px 0 0;
+}
+.stats div {
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: var(--surface-2);
+}
+.stats dt {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--mute);
+}
+.stats dd {
+  margin: 2px 0 0;
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+  word-break: break-word;
+}
+
+/* Read-only output fields. */
+.output {
+  font-family: var(--mono);
+  font-size: 1rem;
+  background: var(--surface-2) !important;
+  border-color: var(--line) !important;
+}
+.mono-big {
+  font-family: var(--mono);
+  font-size: 1.25rem;
+  letter-spacing: 0.02em;
+  word-break: break-all;
+}
+
+/* Coin flip. */
+.coin-stage {
+  display: grid;
+  place-items: center;
+  padding: 12px 0 4px;
+}
+.coin {
+  display: grid;
+  place-items: center;
+  width: 148px;
+  height: 148px;
+  border-radius: 50%;
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  border: 6px solid var(--accent);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+.coin.is-flipping {
+  animation: coin-flip 450ms var(--ease);
+}
+@keyframes coin-flip {
+  0% {
+    transform: rotateY(0) scale(1);
+  }
+  50% {
+    transform: rotateY(540deg) scale(1.08);
+  }
+  100% {
+    transform: rotateY(1080deg) scale(1);
+  }
+}
+
+input[type='range'] {
+  width: 100%;
+  accent-color: var(--accent);
+}
+.winners {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.winners li {
+  padding: 6px 14px;
+  border-radius: var(--r-pill);
+  background: var(--surface);
+  color: var(--ink);
+  font-weight: 700;
 }

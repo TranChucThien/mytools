@@ -1,0 +1,80 @@
+---
+import { t } from '../../i18n';
+import type { Lang, ToolMeta } from '../../lib/types';
+import { S } from './strings';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+const { lang } = Astro.props;
+const s = S[lang];
+const config = { lang, s, invalid: t(lang).errInvalidNumber };
+---
+
+<section class="tool" data-bmi data-config={JSON.stringify(config)}>
+  <div class="grid">
+    <div class="field">
+      <label for="bmi-w">{s.weight}</label>
+      <input id="bmi-w" type="text" inputmode="decimal" value="60" data-weight />
+    </div>
+    <div class="field">
+      <label for="bmi-h">{s.height}</label>
+      <input id="bmi-h" type="text" inputmode="decimal" value="165" data-height />
+    </div>
+  </div>
+  <div class="stack" style="margin-top:16px">
+    <span class="label" id="bmi-std">{s.standard}</span>
+    <div class="segmented" role="radiogroup" aria-labelledby="bmi-std">
+      <label><input type="radio" name="bmi-std" value="asian" checked={s.defaultStandard === 'asian'} data-std /><span>{s.asian}</span></label>
+      <label><input type="radio" name="bmi-std" value="who" checked={s.defaultStandard === 'who'} data-std /><span>{s.who}</span></label>
+    </div>
+  </div>
+  <div class="result" aria-live="polite">
+    <span class="result-value result-big" data-value></span>
+    <span class="result-formula" data-class></span>
+  </div>
+  <p class="error" data-error></p>
+  <dl class="stats">
+    <div><dt>{s.range}</dt><dd data-range>-</dd></div>
+  </dl>
+</section>
+
+<script>
+  import { $, readConfig, setError } from '../../lib/client';
+  import { formatNumber, parseNumber } from '../../lib/number';
+  import type { Lang } from '../../lib/types';
+  import { bmi, classify, healthyRange, type BmiStandard } from './logic';
+  import type { BmiStrings } from './strings';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-bmi]')) {
+    const { lang, s, invalid } = readConfig<{ lang: Lang; s: BmiStrings; invalid: string }>(root);
+    const wIn = $<HTMLInputElement>(root, '[data-weight]');
+    const hIn = $<HTMLInputElement>(root, '[data-height]');
+    const set = (sel: string, text: string) => ($(root, sel).textContent = text);
+
+    const update = () => {
+      const w = parseNumber(wIn.value, lang);
+      const h = parseNumber(hIn.value, lang);
+      const std = (root.querySelector<HTMLInputElement>('[data-std]:checked')?.value ?? 'who') as BmiStandard;
+      setError(wIn, wIn.value.trim() !== '' && w === null);
+      setError(hIn, hIn.value.trim() !== '' && h === null);
+      const v = w !== null && h !== null ? bmi(w, h) : null;
+      if (v === null) {
+        set('[data-value]', '-');
+        set('[data-class]', '');
+        set('[data-range]', '-');
+        set('[data-error]', w === null || h === null ? (wIn.value.trim() && hIn.value.trim() ? invalid : '') : s.errInput);
+        return;
+      }
+      set('[data-error]', '');
+      set('[data-value]', formatNumber(v, lang, 1));
+      set('[data-class]', s.classes[classify(v, std)]);
+      const [lo, hi] = healthyRange(h!, std);
+      set('[data-range]', `${formatNumber(lo, lang, 1)} - ${formatNumber(hi, lang, 1)} kg`);
+    };
+    root.addEventListener('input', update);
+    root.addEventListener('change', update);
+    update();
+  }
+</script>

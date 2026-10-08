@@ -16,6 +16,7 @@ for (const [path, mod] of Object.entries(files)) {
 
 validateRegistry(TOOLS, new Set(byKey.keys()));
 
-export function getContent(id: string, lang: Lang): ToolContent {
-  return byKey.get(contentKey(id, lang))!;
+/** Hand-written content for a tool, if a `<id>.<lang>.md` file exists. */
+export function getContent(id: string, lang: Lang): ToolContent | undefined {
+  return byKey.get(contentKey(id, lang));
 }

@@ -1,0 +1,29 @@
+---
+import type { Lang, ToolMeta } from '../../lib/types';
+import { converterArticle } from './article';
+import type { Direction } from './logic';
+import { getPair } from './units';
+
+interface Props {
+  tool: ToolMeta;
+  lang: Lang;
+}
+const { tool, lang } = Astro.props;
+const { pairId, direction } = tool.props as { pairId: string; direction: Direction };
+const art = converterArticle(getPair(pairId), direction, lang);
+const h = lang === 'vi'
+  ? { how: `Cách ${tool.h1.vi.toLowerCase()}`, formula: 'Công thức quy đổi', examples: 'Ví dụ', about: 'Về đơn vị này' }
+  : { how: `How to use the ${tool.name.en} converter`, formula: 'Conversion formula', examples: 'Examples', about: 'About these units' };
+---
+
+<h2>{h.how}</h2>
+<p>{art.howTo}</p>
+<h2>{h.formula}</h2>
+<blockquote><p><strong>{art.formula}</strong></p></blockquote>
+<p>{art.units}</p>
+<h2>{h.examples}</h2>
+<ul>
+  {art.examples.map((e) => <li>{e}</li>)}
+</ul>
+<h2>{h.about}</h2>
+<p>{art.about}</p>

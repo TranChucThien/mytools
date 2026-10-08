@@ -10,6 +10,7 @@ export const en: UiStrings = {
   homeIntro:
     'Small tools for everyday tasks. Open one and it just works, right in your browser, no account needed.',
   home: 'Home',
+  seeAll: 'See all',
   allTools: 'All tools',
   searchLabel: 'Search tools',
   searchPlaceholder: 'Search tools, e.g. percent, QR, kg',

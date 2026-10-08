@@ -1,0 +1,62 @@
+---
+import type { Lang, ToolMeta } from '../../lib/types';
+import { S } from './strings';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+const { lang } = Astro.props;
+const s = S[lang];
+---
+
+<section class="tool" data-coin data-config={JSON.stringify({ lang, s })}>
+  <div class="coin-stage">
+    <div class="coin" aria-live="polite" data-face>{s.ready}</div>
+  </div>
+  <div class="actions" style="justify-content:center">
+    <button type="button" class="btn" data-flip>{s.flip}</button>
+    <button type="button" class="btn btn-secondary" data-reset>{s.reset}</button>
+  </div>
+  <dl class="stats">
+    <div><dt>{s.heads}</dt><dd data-heads>0</dd></div>
+    <div><dt>{s.tails}</dt><dd data-tails>0</dd></div>
+    <div><dt>{s.total}</dt><dd data-total>0</dd></div>
+  </dl>
+</section>
+
+<script>
+  import { $, readConfig } from '../../lib/client';
+  import { formatNumber } from '../../lib/number';
+  import type { Lang } from '../../lib/types';
+  import { flipCoin } from './logic';
+  import type { CoinStrings } from './strings';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-coin]')) {
+    const { lang, s } = readConfig<{ lang: Lang; s: CoinStrings }>(root);
+    const face = $(root, '[data-face]');
+    let heads = 0;
+    let tails = 0;
+    const render = () => {
+      $(root, '[data-heads]').textContent = formatNumber(heads, lang);
+      $(root, '[data-tails]').textContent = formatNumber(tails, lang);
+      $(root, '[data-total]').textContent = formatNumber(heads + tails, lang);
+    };
+    $(root, '[data-flip]').addEventListener('click', () => {
+      const side = flipCoin();
+      if (side === 'heads') heads++;
+      else tails++;
+      face.textContent = side === 'heads' ? s.heads : s.tails;
+      // Restart the flip animation as feedback that a new result arrived.
+      face.classList.remove('is-flipping');
+      void face.offsetWidth;
+      face.classList.add('is-flipping');
+      render();
+    });
+    $(root, '[data-reset]').addEventListener('click', () => {
+      heads = tails = 0;
+      face.textContent = s.ready;
+      render();
+    });
+  }
+</script>

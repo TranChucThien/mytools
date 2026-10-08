@@ -1,0 +1,62 @@
+---
+import { t } from '../../i18n';
+import type { Lang, ToolMeta } from '../../lib/types';
+import { S } from './strings';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+const { lang } = Astro.props;
+const s = S[lang];
+---
+
+<section class="tool" data-case data-copied={t(lang).copied}>
+  <div class="field">
+    <label for="cc-in">{s.input}</label>
+    <textarea id="cc-in" rows="5" data-in>{s.example}</textarea>
+  </div>
+  <div class="actions">
+    {
+      Object.entries(s.modes).map(([mode, label], i) => (
+        <button type="button" class={i === 0 ? 'btn' : 'btn btn-secondary'} data-mode={mode} aria-pressed={i === 0 ? 'true' : 'false'}>
+          {label}
+        </button>
+      ))
+    }
+  </div>
+  <div class="field" style="margin-top:16px">
+    <label for="cc-out">{s.output}</label>
+    <textarea id="cc-out" rows="5" class="output" readonly data-out></textarea>
+  </div>
+  <div class="actions">
+    <button type="button" class="btn btn-secondary" data-copy>{t(lang).copy}</button>
+  </div>
+</section>
+
+<script>
+  import { $, setupCopy } from '../../lib/client';
+  import { convertCase, type CaseMode } from './logic';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-case]')) {
+    const input = $<HTMLTextAreaElement>(root, '[data-in]');
+    const output = $<HTMLTextAreaElement>(root, '[data-out]');
+    const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-mode]')];
+    let mode: CaseMode = 'upper';
+    const update = () => (output.value = convertCase(input.value, mode));
+    for (const b of buttons) {
+      b.addEventListener('click', () => {
+        mode = b.dataset.mode as CaseMode;
+        for (const other of buttons) {
+          const active = other === b;
+          other.classList.toggle('btn-secondary', !active);
+          other.setAttribute('aria-pressed', String(active));
+        }
+        update();
+      });
+    }
+    input.addEventListener('input', update);
+    setupCopy($<HTMLButtonElement>(root, '[data-copy]'), () => output.value, root.dataset.copied ?? '');
+    update();
+  }
+</script>

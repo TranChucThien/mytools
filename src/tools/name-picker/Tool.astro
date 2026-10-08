@@ -1,0 +1,70 @@
+---
+import type { Lang, ToolMeta } from '../../lib/types';
+import { S } from './strings';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+const { lang } = Astro.props;
+const s = S[lang];
+---
+
+<section class="tool" data-picker data-config={JSON.stringify({ lang, s })}>
+  <div class="field">
+    <label for="np-list">{s.list}</label>
+    <textarea id="np-list" rows="7" data-list>{s.example}</textarea>
+    <p class="hint" data-count-hint></p>
+  </div>
+  <div class="grid" style="margin-top:8px">
+    <div class="field">
+      <label for="np-count">{s.count}</label>
+      <input id="np-count" type="text" inputmode="numeric" value="1" data-count />
+    </div>
+  </div>
+  <label class="check"><input type="checkbox" data-remove /> {s.remove}</label>
+  <div class="actions">
+    <button type="button" class="btn" data-pick>{s.pick}</button>
+  </div>
+  <div class="result" aria-live="polite" data-result hidden>
+    <ul class="winners" data-winners></ul>
+  </div>
+  <p class="error" data-error></p>
+</section>
+
+<script>
+  import { $, readConfig } from '../../lib/client';
+  import { formatNumber, parseNumber } from '../../lib/number';
+  import type { Lang } from '../../lib/types';
+  import { parseNames, pickNames } from './logic';
+  import type { PickerStrings } from './strings';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-picker]')) {
+    const { lang, s } = readConfig<{ lang: Lang; s: PickerStrings }>(root);
+    const list = $<HTMLTextAreaElement>(root, '[data-list]');
+    const countIn = $<HTMLInputElement>(root, '[data-count]');
+    const result = $(root, '[data-result]');
+    const hint = () => ($(root, '[data-count-hint]').textContent = `${formatNumber(parseNames(list.value).length, lang)} ${s.entries}`);
+
+    $(root, '[data-pick]').addEventListener('click', () => {
+      const names = parseNames(list.value);
+      const count = parseNumber(countIn.value, lang) ?? 0;
+      const r = pickNames(names, count);
+      if (!r.ok) {
+        $(root, '[data-error]').textContent = r.error === 'empty' ? s.errEmpty : s.errCount;
+        result.hidden = true;
+        return;
+      }
+      $(root, '[data-error]').textContent = '';
+      const ul = $(root, '[data-winners]');
+      ul.replaceChildren(...r.winners.map((w) => Object.assign(document.createElement('li'), { textContent: w })));
+      result.hidden = false;
+      if ($<HTMLInputElement>(root, '[data-remove]').checked) {
+        list.value = r.rest.join('\n');
+        hint();
+      }
+    });
+    list.addEventListener('input', hint);
+    hint();
+  }
+</script>

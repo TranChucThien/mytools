@@ -1,0 +1,48 @@
+---
+import { t } from '../../i18n';
+import type { Lang, ToolMeta } from '../../lib/types';
+import { S } from './strings';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+const { lang } = Astro.props;
+const s = S[lang];
+---
+
+<section class="tool" data-slug data-copied={t(lang).copied}>
+  <div class="field">
+    <label for="sl-in">{s.input}</label>
+    <input id="sl-in" type="text" value={s.example} data-in />
+  </div>
+  <div class="stack" style="margin-top:16px">
+    <span class="label" id="sl-sep">{s.separator}</span>
+    <div class="segmented" role="radiogroup" aria-labelledby="sl-sep">
+      <label><input type="radio" name="sl-sep" value="-" checked data-sep /><span>-</span></label>
+      <label><input type="radio" name="sl-sep" value="_" data-sep /><span>_</span></label>
+    </div>
+  </div>
+  <div class="result" aria-live="polite">
+    <span class="result-value mono-big" data-out></span>
+    <button type="button" class="btn btn-secondary btn-sm" data-copy>{t(lang).copy}</button>
+  </div>
+</section>
+
+<script>
+  import { $, setupCopy } from '../../lib/client';
+  import { slugify } from '../../lib/text';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-slug]')) {
+    const input = $<HTMLInputElement>(root, '[data-in]');
+    const out = $(root, '[data-out]');
+    const update = () => {
+      const sep = (root.querySelector<HTMLInputElement>('[data-sep]:checked')?.value ?? '-') as '-' | '_';
+      out.textContent = slugify(input.value, sep) || '-';
+    };
+    root.addEventListener('input', update);
+    root.addEventListener('change', update);
+    setupCopy($<HTMLButtonElement>(root, '[data-copy]'), () => (out.textContent === '-' ? '' : (out.textContent ?? '')), root.dataset.copied ?? '');
+    update();
+  }
+</script>

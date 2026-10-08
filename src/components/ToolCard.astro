@@ -1,0 +1,17 @@
+---
+import { toolPath } from '../lib/registry';
+import type { Lang, ToolMeta } from '../lib/types';
+
+interface Props {
+  tool: ToolMeta;
+  lang: Lang;
+}
+const { tool, lang } = Astro.props;
+---
+
+<li>
+  <a class="card" href={toolPath(tool, lang)}>
+    <strong>{tool.name[lang]}</strong>
+    <span>{tool.intro[lang]}</span>
+  </a>
+</li>

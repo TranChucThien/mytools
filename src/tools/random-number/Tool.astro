@@ -1,0 +1,104 @@
+---
+import { t } from '../../i18n';
+import type { Lang, ToolMeta } from '../../lib/types';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+
+const { lang } = Astro.props;
+const s = t(lang);
+const config = {
+  lang,
+  s: {
+    invalid: s.errInvalidNumber,
+    minMax: s.rndErrMinMax,
+    count: s.rndErrCount,
+    range: s.rndErrRange,
+    tooMany: s.rndErrTooMany,
+    copied: s.copied,
+  },
+};
+---
+
+<section class="tool" data-rnd data-config={JSON.stringify(config)}>
+  <form data-form novalidate>
+    <div class="grid">
+      <div class="field">
+        <label for="rnd-min">{s.rndMin}</label>
+        <input id="rnd-min" type="text" inputmode="numeric" value="1" data-min />
+      </div>
+      <div class="field">
+        <label for="rnd-max">{s.rndMax}</label>
+        <input id="rnd-max" type="text" inputmode="numeric" value="100" data-max />
+      </div>
+      <div class="field">
+        <label for="rnd-count">{s.rndCount}</label>
+        <input id="rnd-count" type="text" inputmode="numeric" value="1" data-count />
+      </div>
+    </div>
+    <label class="check"><input type="checkbox" data-unique checked /> {s.rndUnique}</label>
+    <div class="actions">
+      <button type="submit" class="btn">🎲 {s.rndGenerate}</button>
+    </div>
+  </form>
+  <div class="result" aria-live="polite">
+    <span class="result-value" data-value></span>
+    <button type="button" class="btn btn-secondary btn-sm" data-copy>{s.copy}</button>
+  </div>
+  <p class="error" data-error></p>
+</section>
+
+<script>
+  import { $, readConfig, setError, setupCopy } from '../../lib/client';
+  import { formatNumber, parseNumber } from '../../lib/number';
+  import type { Lang } from '../../lib/types';
+  import { randomInts, type RandomError } from './logic';
+
+  interface Config {
+    lang: Lang;
+    s: Record<'invalid' | RandomError | 'copied', string>;
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-rnd]')) {
+    const { lang, s } = readConfig<Config>(root);
+    const minIn = $<HTMLInputElement>(root, '[data-min]');
+    const maxIn = $<HTMLInputElement>(root, '[data-max]');
+    const countIn = $<HTMLInputElement>(root, '[data-count]');
+    const uniqueIn = $<HTMLInputElement>(root, '[data-unique]');
+    const valueEl = $(root, '[data-value]');
+    const errorEl = $(root, '[data-error]');
+    let copyText = '';
+
+    const generate = () => {
+      const inputs = [minIn, maxIn, countIn];
+      const [min, max, count] = inputs.map((el) => parseNumber(el.value, lang));
+      inputs.forEach((el, i) => setError(el, [min, max, count][i] === null));
+      if (min == null || max == null || count == null) {
+        errorEl.textContent = s.invalid;
+        return;
+      }
+      const r = randomInts({ min, max, count, unique: uniqueIn.checked });
+      if (!r.ok) {
+        errorEl.textContent = s[r.error];
+        setError(countIn, r.error === 'count' || r.error === 'tooMany');
+        setError(minIn, r.error === 'minMax' || r.error === 'range');
+        setError(maxIn, r.error === 'minMax' || r.error === 'range');
+        return;
+      }
+      errorEl.textContent = '';
+      // Grouping separators would make long lists of numbers hard to read; show plain integers.
+      const shown = r.values.map((v) => (Math.abs(v) >= 10000 ? formatNumber(v, lang) : String(v)));
+      valueEl.textContent = shown.join(', ');
+      copyText = r.values.join(', ');
+    };
+
+    $<HTMLFormElement>(root, '[data-form]').addEventListener('submit', (e) => {
+      e.preventDefault();
+      generate();
+    });
+    setupCopy($<HTMLButtonElement>(root, '[data-copy]'), () => copyText, s.copied);
+    generate();
+  }
+</script>

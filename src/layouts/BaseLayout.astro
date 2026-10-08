@@ -1,0 +1,84 @@
+---
+import '../styles/global.css';
+import SeoHead from '../components/SeoHead.astro';
+import { t } from '../i18n';
+import { homePath, TOOLS, toolPath } from '../lib/registry';
+import { CATEGORIES, type Lang } from '../lib/types';
+
+interface Props {
+  lang: Lang;
+  title: string;
+  description: string;
+  path: string;
+  alternates?: Record<Lang, string>;
+  jsonLd?: object[];
+  noindex?: boolean;
+  /** Target of the language switch link; defaults to the other language's home. */
+  switchHref?: string;
+}
+
+const { lang, alternates, switchHref, ...seo } = Astro.props;
+const s = t(lang);
+const otherLang: Lang = lang === 'vi' ? 'en' : 'vi';
+const switchTo = switchHref ?? alternates?.[otherLang] ?? homePath(otherLang);
+---
+
+<!doctype html>
+<html lang={lang}>
+  <head>
+    <SeoHead lang={lang} alternates={alternates} {...seo} />
+  </head>
+  <body>
+    <header class="site-header">
+      <div class="container">
+        <a class="brand" href={homePath(lang)}>
+          <svg viewBox="0 0 32 32" aria-hidden="true"
+            ><rect width="32" height="32" rx="8" fill="#0b7a5c"></rect><path
+              d="M9 16.5l4.5 4.5L23 11.5"
+              fill="none"
+              stroke="#fff"
+              stroke-width="3.2"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path></svg
+          >
+          <span>{s.siteName}</span>
+        </a>
+        <a class="lang-switch" href={switchTo} hreflang={otherLang} lang={otherLang}>{s.langSwitchLabel}</a>
+      </div>
+    </header>
+
+    <main>
+      <div class="container">
+        <slot />
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-cols">
+          {
+            CATEGORIES.map((cat) => {
+              const tools = TOOLS.filter((tool) => tool.category === cat);
+              return (
+                tools.length > 0 && (
+                  <div>
+                    <h2>{s.categories[cat]}</h2>
+                    <ul>
+                      {tools.map((tool) => (
+                        <li>
+                          <a href={toolPath(tool, lang)}>{tool.name[lang]}</a>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )
+              );
+            })
+          }
+        </div>
+        <p>{s.footerNote}</p>
+        <p>© {new Date().getFullYear()} congcumienphi.id.vn</p>
+      </div>
+    </footer>
+  </body>
+</html>

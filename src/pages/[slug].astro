@@ -1,0 +1,12 @@
+---
+import type { GetStaticPaths } from 'astro';
+import ToolLayout from '../layouts/ToolLayout.astro';
+import { TOOLS } from '../lib/registry';
+import type { ToolMeta } from '../lib/types';
+
+export const getStaticPaths = (() => TOOLS.map((tool) => ({ params: { slug: tool.slug.vi }, props: { tool } }))) satisfies GetStaticPaths;
+
+const { tool } = Astro.props as { tool: ToolMeta };
+---
+
+<ToolLayout tool={tool} lang="vi" />

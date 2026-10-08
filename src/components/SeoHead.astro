@@ -1,0 +1,54 @@
+---
+import { absoluteUrl, SITE_NAME } from '../lib/seo';
+import type { Lang } from '../lib/types';
+
+interface Props {
+  lang: Lang;
+  title: string;
+  description: string;
+  /** Canonical path of this page, e.g. "/tinh-phan-tram/". */
+  path: string;
+  /** Path of each language version; omitted for pages without translations. */
+  alternates?: Record<Lang, string>;
+  jsonLd?: object[];
+  noindex?: boolean;
+}
+
+const { lang, title, description, path, alternates, jsonLd = [], noindex = false } = Astro.props;
+const canonical = absoluteUrl(path);
+const ogImage = absoluteUrl('/og-default.png');
+const ogLocale = lang === 'vi' ? 'vi_VN' : 'en_US';
+---
+
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>{title}</title>
+<meta name="description" content={description} />
+{noindex ? <meta name="robots" content="noindex" /> : <link rel="canonical" href={canonical} />}
+{
+  alternates && (
+    <>
+      <link rel="alternate" hreflang="vi" href={absoluteUrl(alternates.vi)} />
+      <link rel="alternate" hreflang="en" href={absoluteUrl(alternates.en)} />
+      <link rel="alternate" hreflang="x-default" href={absoluteUrl(alternates.vi)} />
+    </>
+  )
+}
+<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<meta name="theme-color" content="#0b7a5c" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content={SITE_NAME} />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:image" content={ogImage} />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:locale" content={ogLocale} />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:image" content={ogImage} />
+
+{jsonLd.map((ld) => <script type="application/ld+json" set:html={JSON.stringify(ld)} />)}

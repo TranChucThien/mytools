@@ -1,0 +1,68 @@
+---
+import AdSlot from '../components/AdSlot.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import Faq from '../components/Faq.astro';
+import RelatedTools from '../components/RelatedTools.astro';
+import TrustBadges from '../components/TrustBadges.astro';
+import { t } from '../i18n';
+import { getContent } from '../lib/content';
+import { homePath, toolPath } from '../lib/registry';
+import { breadcrumbLd, faqLd, webApplicationLd } from '../lib/seo';
+import type { Lang, ToolMeta } from '../lib/types';
+import Percentage from '../tools/percentage/Tool.astro';
+import QrCode from '../tools/qr-code/Tool.astro';
+import RandomNumber from '../tools/random-number/Tool.astro';
+import UnitConverter from '../tools/unit-converter/Tool.astro';
+import BaseLayout from './BaseLayout.astro';
+
+interface Props {
+  tool: ToolMeta;
+  lang: Lang;
+}
+
+const COMPONENTS = {
+  percentage: Percentage,
+  'unit-converter': UnitConverter,
+  'random-number': RandomNumber,
+  'qr-code': QrCode,
+} as const;
+
+const { tool, lang } = Astro.props;
+const s = t(lang);
+const content = getContent(tool.id, lang);
+const faq = content.frontmatter.faq ?? [];
+const Tool = COMPONENTS[tool.component];
+
+const crumbs = [
+  { name: s.home, path: homePath(lang) },
+  { name: tool.name[lang], path: toolPath(tool, lang) },
+];
+const jsonLd: object[] = [webApplicationLd(tool, lang), breadcrumbLd(crumbs)];
+if (faq.length > 0) jsonLd.push(faqLd(faq));
+---
+
+<BaseLayout
+  lang={lang}
+  title={tool.title[lang]}
+  description={tool.description[lang]}
+  path={toolPath(tool, lang)}
+  alternates={{ vi: toolPath(tool, 'vi'), en: toolPath(tool, 'en') }}
+  jsonLd={jsonLd}
+>
+  <Breadcrumbs items={crumbs} />
+  <h1>{tool.h1[lang]}</h1>
+  <p class="lead">{tool.intro[lang]}</p>
+
+  <Tool lang={lang} tool={tool} />
+  <noscript><p class="error">{s.noscript}</p></noscript>
+  <TrustBadges lang={lang} />
+
+  <AdSlot name="after-result" />
+
+  <article class="prose">
+    <content.Content />
+  </article>
+
+  <Faq heading={s.faqHeading} items={faq} />
+  <RelatedTools tool={tool} lang={lang} heading={s.relatedHeading} />
+</BaseLayout>

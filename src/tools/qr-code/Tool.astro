@@ -1,0 +1,146 @@
+---
+import { t } from '../../i18n';
+import { DEFAULT_SIZE, MAX_SIZE, MAX_TEXT_LENGTH, MIN_SIZE } from './logic';
+import type { Lang, ToolMeta } from '../../lib/types';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+
+const { lang } = Astro.props;
+const s = t(lang);
+const config = { s: { empty: s.qrErrEmpty, tooLong: s.qrErrTooLong, render: s.qrErrRender } };
+---
+
+<section class="tool" data-qr data-config={JSON.stringify(config)}>
+  <div class="field">
+    <label for="qr-text">{s.qrText}</label>
+    <textarea id="qr-text" maxlength={MAX_TEXT_LENGTH} placeholder={s.qrPlaceholder} data-text
+      >https://congcumienphi.id.vn/</textarea
+    >
+  </div>
+  <div class="grid" style="margin-top:12px">
+    <div class="field">
+      <label for="qr-size">{s.qrSize}</label>
+      <input id="qr-size" type="number" min={MIN_SIZE} max={MAX_SIZE} step="32" value={DEFAULT_SIZE} data-size />
+    </div>
+    <div class="field">
+      <label for="qr-ecc">{s.qrEcc}</label>
+      <select id="qr-ecc" data-ecc>
+        <option value="L">L (7%)</option>
+        <option value="M" selected>M (15%)</option>
+        <option value="Q">Q (25%)</option>
+        <option value="H">H (30%)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="qr-fg">{s.qrFg}</label>
+      <input id="qr-fg" type="color" value="#000000" data-fg />
+    </div>
+    <div class="field">
+      <label for="qr-bg">{s.qrBg}</label>
+      <input id="qr-bg" type="color" value="#ffffff" data-bg />
+    </div>
+  </div>
+
+  <div class="qr-preview">
+    <canvas data-canvas aria-label="QR code" role="img"></canvas>
+  </div>
+  <p class="error" data-error aria-live="polite"></p>
+  <div class="actions">
+    <button type="button" class="btn" data-png>{s.qrDownloadPng}</button>
+    <button type="button" class="btn btn-secondary" data-svg>{s.qrDownloadSvg}</button>
+  </div>
+  <p class="lead" style="margin:12px 0 0;font-size:.9rem">🔒 {s.qrPrivacy}</p>
+</section>
+
+<style>
+  .qr-preview {
+    margin-top: 16px;
+    display: flex;
+    justify-content: center;
+    padding: 16px;
+    background: var(--surface-2);
+    border-radius: var(--radius-sm);
+  }
+  .qr-preview canvas {
+    width: min(256px, 100%) !important;
+    height: auto !important;
+    image-rendering: pixelated;
+  }
+</style>
+
+<script>
+  import QRCode from 'qrcode';
+  import { $, debounce, readConfig } from '../../lib/client';
+  import { clampSize, validateQrInput } from './logic';
+
+  interface Config {
+    s: Record<'empty' | 'tooLong' | 'render', string>;
+  }
+
+  type Ecc = 'L' | 'M' | 'Q' | 'H';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-qr]')) {
+    const { s } = readConfig<Config>(root);
+    const textIn = $<HTMLTextAreaElement>(root, '[data-text]');
+    const sizeIn = $<HTMLInputElement>(root, '[data-size]');
+    const eccIn = $<HTMLSelectElement>(root, '[data-ecc]');
+    const fgIn = $<HTMLInputElement>(root, '[data-fg]');
+    const bgIn = $<HTMLInputElement>(root, '[data-bg]');
+    const canvas = $<HTMLCanvasElement>(root, '[data-canvas]');
+    const errorEl = $(root, '[data-error]');
+    const pngBtn = $<HTMLButtonElement>(root, '[data-png]');
+    const svgBtn = $<HTMLButtonElement>(root, '[data-svg]');
+
+    const options = () => ({
+      width: clampSize(Number(sizeIn.value)),
+      margin: 2,
+      errorCorrectionLevel: eccIn.value as Ecc,
+      color: { dark: fgIn.value, light: bgIn.value },
+    });
+
+    const setReady = (ready: boolean) => {
+      pngBtn.disabled = !ready;
+      svgBtn.disabled = !ready;
+      canvas.style.visibility = ready ? 'visible' : 'hidden';
+    };
+
+    const render = async () => {
+      const v = validateQrInput(textIn.value);
+      if (!v.ok) {
+        errorEl.textContent = s[v.error];
+        return setReady(false);
+      }
+      try {
+        await QRCode.toCanvas(canvas, textIn.value, options());
+        errorEl.textContent = '';
+        setReady(true);
+      } catch {
+        errorEl.textContent = s.render;
+        setReady(false);
+      }
+    };
+
+    const download = (href: string, ext: string) => {
+      const a = document.createElement('a');
+      a.href = href;
+      a.download = `qr-code.${ext}`;
+      a.click();
+    };
+
+    pngBtn.addEventListener('click', () => download(canvas.toDataURL('image/png'), 'png'));
+    svgBtn.addEventListener('click', async () => {
+      const svg = await QRCode.toString(textIn.value, { ...options(), type: 'svg' });
+      const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+      download(url, 'svg');
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    });
+
+    const debounced = debounce(render, 150);
+    for (const el of [textIn, sizeIn, eccIn, fgIn, bgIn]) el.addEventListener('input', debounced);
+    sizeIn.addEventListener('change', () => (sizeIn.value = String(clampSize(Number(sizeIn.value)))));
+    render();
+  }
+</script>

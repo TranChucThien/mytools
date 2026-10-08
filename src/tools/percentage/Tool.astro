@@ -1,0 +1,141 @@
+---
+import { t } from '../../i18n';
+import type { Lang, ToolMeta } from '../../lib/types';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+
+const { lang } = Astro.props;
+const s = t(lang);
+const config = {
+  lang,
+  s: {
+    invalid: s.errInvalidNumber,
+    divZero: s.pctDivZero,
+    fromZero: s.pctChangeFromZero,
+    increase: s.pctIncrease,
+    decrease: s.pctDecrease,
+    noChange: s.pctNoChange,
+    copied: s.copied,
+  },
+};
+// Pre-filled examples so a result is visible immediately.
+const ex = { a: '20', b: '150', c: '30', d: '150', e: '100', f: '125' };
+---
+
+<div class="pct" data-pct data-config={JSON.stringify(config)}>
+  <section class="tool" data-mode="of">
+    <h2 class="tool-title">{s.pctMode1}</h2>
+    <div class="sentence">
+      <input type="text" inputmode="decimal" aria-label="X (%)" value={ex.a} data-x />
+      <span>{s.pctOf}</span>
+      <input type="text" inputmode="decimal" aria-label="Y" value={ex.b} data-y />
+      <span>{s.pctIs}</span>
+    </div>
+    <div class="result" aria-live="polite">
+      <span class="result-value" data-value></span>
+      <button type="button" class="btn btn-secondary btn-sm" data-copy>{s.copy}</button>
+      <span class="result-formula" data-formula></span>
+    </div>
+    <p class="error" data-error></p>
+  </section>
+
+  <section class="tool" data-mode="what">
+    <h2 class="tool-title">{s.pctMode2}</h2>
+    <div class="sentence">
+      <input type="text" inputmode="decimal" aria-label="X" value={ex.c} data-x />
+      <span>{s.pctWhatPercentOf}</span>
+      <input type="text" inputmode="decimal" aria-label="Y" value={ex.d} data-y />
+    </div>
+    <div class="result" aria-live="polite">
+      <span class="result-value" data-value></span>
+      <button type="button" class="btn btn-secondary btn-sm" data-copy>{s.copy}</button>
+      <span class="result-formula" data-formula></span>
+    </div>
+    <p class="error" data-error></p>
+  </section>
+
+  <section class="tool" data-mode="change">
+    <h2 class="tool-title">{s.pctMode3}</h2>
+    <div class="sentence">
+      <span>{s.pctFrom}</span>
+      <input type="text" inputmode="decimal" aria-label="X" value={ex.e} data-x />
+      <span>{s.pctTo}</span>
+      <input type="text" inputmode="decimal" aria-label="Y" value={ex.f} data-y />
+    </div>
+    <div class="result" aria-live="polite">
+      <span class="result-value" data-value></span>
+      <button type="button" class="btn btn-secondary btn-sm" data-copy>{s.copy}</button>
+      <span class="result-formula" data-formula></span>
+    </div>
+    <p class="error" data-error></p>
+  </section>
+</div>
+
+<script>
+  import { $, readConfig, setError, setupCopy } from '../../lib/client';
+  import { formatNumber, parseNumber } from '../../lib/number';
+  import type { Lang } from '../../lib/types';
+  import { percentChange, percentOf, whatPercent } from './logic';
+
+  interface Config {
+    lang: Lang;
+    s: Record<'invalid' | 'divZero' | 'fromZero' | 'increase' | 'decrease' | 'noChange' | 'copied', string>;
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-pct]')) {
+    const { lang, s } = readConfig<Config>(root);
+    const f = (n: number) => formatNumber(n, lang);
+
+    for (const card of root.querySelectorAll<HTMLElement>('[data-mode]')) {
+      const mode = card.dataset.mode;
+      const xIn = $<HTMLInputElement>(card, '[data-x]');
+      const yIn = $<HTMLInputElement>(card, '[data-y]');
+      const valueEl = $(card, '[data-value]');
+      const formulaEl = $(card, '[data-formula]');
+      const errorEl = $(card, '[data-error]');
+      let copyText = '';
+
+      const show = (value: string, formula: string, error = '') => {
+        valueEl.textContent = value;
+        formulaEl.textContent = formula;
+        errorEl.textContent = error;
+        copyText = value;
+      };
+
+      const update = () => {
+        const x = parseNumber(xIn.value, lang);
+        const y = parseNumber(yIn.value, lang);
+        setError(xIn, xIn.value.trim() !== '' && x === null);
+        setError(yIn, yIn.value.trim() !== '' && y === null);
+        if (x === null || y === null) {
+          const anyTyped = xIn.value.trim() !== '' && yIn.value.trim() !== '';
+          return show('—', '', anyTyped ? s.invalid : '');
+        }
+
+        if (mode === 'of') {
+          const r = percentOf(x, y);
+          return show(f(r), `${f(x)} × ${f(y)} ÷ 100 = ${f(r)}`);
+        }
+        if (mode === 'what') {
+          const r = whatPercent(x, y);
+          if (r === null) return show('—', '', s.divZero);
+          return show(`${f(r)}%`, `${f(x)} ÷ ${f(y)} × 100 = ${f(r)}%`);
+        }
+        const r = percentChange(x, y);
+        if (r === null) return show('—', '', s.fromZero);
+        const label = r > 0 ? s.increase : r < 0 ? s.decrease : s.noChange;
+        const value = r === 0 ? label : `${label} ${f(Math.abs(r))}%`;
+        show(value, `(${f(y)} − ${f(x)}) ÷ |${f(x)}| × 100 = ${f(r)}%`);
+        copyText = `${f(r)}%`;
+      };
+
+      xIn.addEventListener('input', update);
+      yIn.addEventListener('input', update);
+      setupCopy($<HTMLButtonElement>(card, '[data-copy]'), () => copyText, s.copied);
+      update();
+    }
+  }
+</script>

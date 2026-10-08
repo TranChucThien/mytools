@@ -1,0 +1,118 @@
+---
+import { t } from '../../i18n';
+import { formatNumber } from '../../lib/number';
+import { getTool, toolPath } from '../../lib/registry';
+import type { Lang, ToolMeta } from '../../lib/types';
+import { conversionTable, type Direction } from './logic';
+import { PAIRS } from './units';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+
+const { lang, tool } = Astro.props;
+const s = t(lang);
+const { pairId, direction } = tool.props as { pairId: string; direction: Direction };
+const pair = PAIRS.find((p) => p.id === pairId)!;
+const [a, b] = direction === 'forward' ? [pair.from, pair.to] : [pair.to, pair.from];
+const reverse = getTool(pair.ids[direction === 'forward' ? 'reverse' : 'forward'])!;
+const table = conversionTable(pair.factor, direction);
+// Factor expressed as "1 a = k b" for this page's direction.
+const unitFactor = direction === 'forward' ? pair.factor : 1 / pair.factor;
+
+const config = { lang, factor: unitFactor, aSym: a.symbol, bSym: b.symbol, invalid: s.errInvalidNumber, copied: s.copied };
+---
+
+<section class="tool" data-conv data-config={JSON.stringify(config)}>
+  <div class="grid">
+    <div class="field">
+      <label for="conv-a">{a.name[lang]} ({a.symbol})</label>
+      <input id="conv-a" type="text" inputmode="decimal" value="1" data-a />
+    </div>
+    <div class="field">
+      <label for="conv-b">{b.name[lang]} ({b.symbol})</label>
+      <input id="conv-b" type="text" inputmode="decimal" data-b />
+    </div>
+  </div>
+  <div class="result" aria-live="polite">
+    <span class="result-value" data-value></span>
+    <button type="button" class="btn btn-secondary btn-sm" data-copy>{s.copy}</button>
+    <span class="result-formula">
+      {s.formula}: {b.symbol} = {a.symbol} × {formatNumber(unitFactor, lang, 8)}
+    </span>
+  </div>
+  <p class="error" data-error></p>
+  <div class="actions">
+    <a class="btn btn-secondary" href={toolPath(reverse, lang)}>⇄ {s.convSwap}: {reverse.name[lang]}</a>
+  </div>
+</section>
+
+<section class="prose">
+  <h2>{s.convTable} {a.symbol} → {b.symbol}</h2>
+  <table>
+    <thead>
+      <tr><th scope="col">{a.name[lang]} ({a.symbol})</th><th scope="col">{b.name[lang]} ({b.symbol})</th></tr>
+    </thead>
+    <tbody>
+      {
+        table.map((row) => (
+          <tr>
+            <td>{formatNumber(row.input, lang)} {a.symbol}</td>
+            <td>
+              {formatNumber(row.output, lang, 3)} {b.symbol}
+            </td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+</section>
+
+<script>
+  import { $, readConfig, setError, setupCopy } from '../../lib/client';
+  import { formatNumber, parseNumber } from '../../lib/number';
+  import type { Lang } from '../../lib/types';
+
+  interface Config {
+    lang: Lang;
+    factor: number;
+    aSym: string;
+    bSym: string;
+    invalid: string;
+    copied: string;
+  }
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-conv]')) {
+    const { lang, factor, aSym, bSym, invalid, copied } = readConfig<Config>(root);
+    const aIn = $<HTMLInputElement>(root, '[data-a]');
+    const bIn = $<HTMLInputElement>(root, '[data-b]');
+    const valueEl = $(root, '[data-value]');
+    const errorEl = $(root, '[data-error]');
+
+    // Edits to either box update the other; the summary always reads a → b.
+    const sync = (source: 'a' | 'b') => {
+      const src = source === 'a' ? aIn : bIn;
+      const dst = source === 'a' ? bIn : aIn;
+      const v = parseNumber(src.value, lang);
+      const bad = src.value.trim() !== '' && v === null;
+      setError(src, bad);
+      setError(dst, false);
+      errorEl.textContent = bad ? invalid : '';
+      if (v === null) {
+        dst.value = '';
+        valueEl.textContent = '—';
+        return;
+      }
+      const out = source === 'a' ? v * factor : v / factor;
+      dst.value = formatNumber(out, lang);
+      const [av, bv] = source === 'a' ? [v, out] : [out, v];
+      valueEl.textContent = `${formatNumber(av, lang)} ${aSym} = ${formatNumber(bv, lang)} ${bSym}`;
+    };
+
+    aIn.addEventListener('input', () => sync('a'));
+    bIn.addEventListener('input', () => sync('b'));
+    setupCopy($<HTMLButtonElement>(root, '[data-copy]'), () => bIn.value, copied);
+    sync('a');
+  }
+</script>

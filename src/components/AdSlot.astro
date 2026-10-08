@@ -1,0 +1,9 @@
+---
+/** Reserved ad position. Renders an empty, hidden container until ads are enabled. */
+interface Props {
+  name: string;
+}
+const { name } = Astro.props;
+---
+
+<div class="ad-slot" data-ad-slot={name}></div>

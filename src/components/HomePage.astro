@@ -1,0 +1,45 @@
+---
+import { t } from '../i18n';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import { homePath, TOOLS } from '../lib/registry';
+import { websiteLd } from '../lib/seo';
+import { CATEGORIES, type Lang } from '../lib/types';
+import ToolCard from './ToolCard.astro';
+import TrustBadges from './TrustBadges.astro';
+
+interface Props {
+  lang: Lang;
+}
+const { lang } = Astro.props;
+const s = t(lang);
+---
+
+<BaseLayout
+  lang={lang}
+  title={s.homeTitle}
+  description={s.homeDescription}
+  path={homePath(lang)}
+  alternates={{ vi: homePath('vi'), en: homePath('en') }}
+  jsonLd={[websiteLd(lang)]}
+>
+  <h1>{s.homeH1}</h1>
+  <p class="lead">{s.homeIntro}</p>
+  <TrustBadges lang={lang} />
+  {
+    CATEGORIES.map((cat) => {
+      const tools = TOOLS.filter((tool) => tool.category === cat);
+      return (
+        tools.length > 0 && (
+          <section>
+            <h2>{s.categories[cat]}</h2>
+            <ul class="cards">
+              {tools.map((tool) => (
+                <ToolCard tool={tool} lang={lang} />
+              ))}
+            </ul>
+          </section>
+        )
+      );
+    })
+  }
+</BaseLayout>

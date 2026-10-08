@@ -1,0 +1,23 @@
+---
+import type { FaqItem } from '../lib/types';
+
+interface Props {
+  heading: string;
+  items: FaqItem[];
+}
+const { heading, items } = Astro.props;
+---
+
+{
+  items.length > 0 && (
+    <section class="faq">
+      <h2>{heading}</h2>
+      {items.map((f) => (
+        <details>
+          <summary>{f.q}</summary>
+          <p>{f.a}</p>
+        </details>
+      ))}
+    </section>
+  )
+}

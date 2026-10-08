@@ -1,0 +1,86 @@
+---
+import type { Lang, ToolMeta } from '../../lib/types';
+import { BANKS } from './banks';
+import { MAX_MESSAGE } from './logic';
+import { S } from './strings';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+const { lang } = Astro.props;
+const s = S[lang];
+---
+
+<section class="tool" data-vietqr data-config={JSON.stringify({ lang, s })}>
+  <div class="grid">
+    <div class="field">
+      <label for="vq-bank">{s.bank}</label>
+      <select id="vq-bank" data-bank>
+        {BANKS.map((b) => <option value={b.bin}>{b.name}</option>)}
+      </select>
+    </div>
+    <div class="field">
+      <label for="vq-account">{s.account}</label>
+      <input id="vq-account" type="text" inputmode="numeric" autocomplete="off" placeholder={s.placeholderAccount} data-account />
+    </div>
+    <div class="field">
+      <label for="vq-amount">{s.amount}</label>
+      <input id="vq-amount" type="text" inputmode="numeric" data-amount />
+    </div>
+    <div class="field">
+      <label for="vq-message">{s.message}</label>
+      <input id="vq-message" type="text" maxlength={MAX_MESSAGE * 2} data-message />
+    </div>
+  </div>
+  <p class="hint" data-sent></p>
+  <div class="qr-preview" style="margin-top:16px;display:flex;justify-content:center;padding:16px;background:var(--surface-2);border-radius:16px">
+    <canvas data-canvas aria-label="VietQR" role="img" style="width:min(260px,100%);height:auto;image-rendering:pixelated"></canvas>
+  </div>
+  <p class="error" data-error aria-live="polite"></p>
+  <div class="actions">
+    <button type="button" class="btn" data-png>{s.download}</button>
+  </div>
+  <p class="hint">{s.check}</p>
+</section>
+
+<script>
+  import QRCode from 'qrcode';
+  import { $, debounce, readConfig } from '../../lib/client';
+  import { parseNumber } from '../../lib/number';
+  import type { Lang } from '../../lib/types';
+  import { cleanMessage, validateVietQr, vietQrPayload } from './logic';
+  import type { VietQrStrings } from './strings';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-vietqr]')) {
+    const { lang, s } = readConfig<{ lang: Lang; s: VietQrStrings }>(root);
+    const canvas = $<HTMLCanvasElement>(root, '[data-canvas]');
+    const png = $<HTMLButtonElement>(root, '[data-png]');
+    const val = (sel: string) => $<HTMLInputElement>(root, sel).value.trim();
+
+    const render = async () => {
+      const account = val('[data-account]');
+      const amountText = val('[data-amount]');
+      const amount = amountText === '' ? undefined : (parseNumber(amountText, lang) ?? NaN);
+      const message = cleanMessage(val('[data-message]'));
+      $(root, '[data-sent]').textContent = message ? `${s.sent}: ${message}` : '';
+      const input = { bin: $<HTMLSelectElement>(root, '[data-bank]').value, account, amount, message: message || undefined };
+      const err = account === '' ? 'empty' : validateVietQr(input);
+      const ready = err === null;
+      png.disabled = !ready;
+      canvas.style.visibility = ready ? 'visible' : 'hidden';
+      $(root, '[data-error]').textContent = err === 'account' ? s.errAccount : err === 'amount' ? s.errAmount : '';
+      if (ready) await QRCode.toCanvas(canvas, vietQrPayload(input), { width: 520, margin: 2, errorCorrectionLevel: 'M' });
+    };
+
+    png.addEventListener('click', () => {
+      const a = document.createElement('a');
+      a.href = canvas.toDataURL('image/png');
+      a.download = `vietqr-${val('[data-account]')}.png`;
+      a.click();
+    });
+    root.addEventListener('input', debounce(render, 150));
+    root.addEventListener('change', render);
+    render();
+  }
+</script>

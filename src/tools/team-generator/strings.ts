@@ -1,0 +1,31 @@
+export const S = {
+  vi: {
+    list: 'Danh sách thành viên (mỗi dòng một người)',
+    byCount: 'Chia theo số đội',
+    bySize: 'Chia theo số người mỗi đội',
+    count: 'Số đội',
+    size: 'Số người mỗi đội',
+    make: 'Chia đội',
+    team: 'Đội',
+    copy: 'Sao chép',
+    copied: 'Đã sao chép!',
+    errEmpty: 'Danh sách đang trống.',
+    errValue: 'Giá trị phải từ 1 đến số thành viên.',
+    example: 'Minh Anh\nGia Huy\nBảo Ngọc\nĐức Thịnh\nThu Trang\nQuốc Bảo\nHải Yến\nTuấn Kiệt\nLan Chi\nNhật Nam',
+  },
+  en: {
+    list: 'Members (one per line)',
+    byCount: 'By number of teams',
+    bySize: 'By team size',
+    count: 'Number of teams',
+    size: 'People per team',
+    make: 'Make teams',
+    team: 'Team',
+    copy: 'Copy',
+    copied: 'Copied!',
+    errEmpty: 'The list is empty.',
+    errValue: 'The value must be between 1 and the number of members.',
+    example: 'Olivia\nLiam\nAmelia\nNoah\nSophia\nLucas\nMia\nEthan\nChloe\nJack',
+  },
+};
+export type TeamStrings = (typeof S)['vi'];

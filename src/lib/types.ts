@@ -31,7 +31,14 @@ export type ToolComponent =
   | 'slug'
   | 'coin-flip'
   | 'name-picker'
-  | 'password';
+  | 'password'
+  | 'number-to-words'
+  | 'savings-interest'
+  | 'loan'
+  | 'date-difference'
+  | 'vietqr'
+  | 'wheel'
+  | 'team-generator';
 
 export interface ToolMeta {
   /** Stable internal id, e.g. 'percentage', 'kg-to-lbs'. Also the content file key. */

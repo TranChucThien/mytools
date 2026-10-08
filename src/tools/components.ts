@@ -14,6 +14,13 @@ import Slug from './slug/Tool.astro';
 import ConverterArticle from './unit-converter/Article.astro';
 import UnitConverter from './unit-converter/Tool.astro';
 import Vat from './vat/Tool.astro';
+import DateDifference from './date-difference/Tool.astro';
+import Loan from './loan/Tool.astro';
+import NumberToWords from './number-to-words/Tool.astro';
+import SavingsInterest from './savings-interest/Tool.astro';
+import TeamGenerator from './team-generator/Tool.astro';
+import VietQr from './vietqr/Tool.astro';
+import Wheel from './wheel/Tool.astro';
 import WordCounter from './word-counter/Tool.astro';
 
 type AstroComponent = typeof Percentage;
@@ -35,6 +42,13 @@ export const TOOL_COMPONENTS: Record<ToolComponent, AstroComponent> = {
   'coin-flip': CoinFlip,
   'name-picker': NamePicker,
   password: Password,
+  'number-to-words': NumberToWords,
+  'savings-interest': SavingsInterest,
+  loan: Loan,
+  'date-difference': DateDifference,
+  vietqr: VietQr,
+  wheel: Wheel,
+  'team-generator': TeamGenerator,
 };
 
 /** Generated article for tools whose pages have no hand-written Markdown. */

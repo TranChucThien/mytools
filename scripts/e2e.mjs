@@ -183,6 +183,59 @@ for (const width of [390, 1280]) {
   await p.close();
 }
 
+// ---------- Wave 2 tools (desktop) ----------
+{
+  const W = '@1280';
+  const val = (p, sel) => p.locator(sel).first().innerText();
+  let p = await page(1280, '/doc-so-thanh-chu/');
+  ok(`n2w vi ${W}`, (await val(p, '[data-n2w] [data-out]')) === 'Một triệu hai trăm năm mươi nghìn đồng');
+  await p.locator('[data-n2w] [data-in]').fill('1.000.005');
+  ok(`n2w zero groups ${W}`, (await val(p, '[data-n2w] [data-out]')) === 'Một triệu không trăm linh năm đồng');
+  await p.close();
+  p = await page(1280, '/en/number-to-words/');
+  ok(`n2w en ${W}`, (await val(p, '[data-n2w] [data-out]')) === 'One million two hundred fifty thousand');
+  await p.close();
+
+  p = await page(1280, '/tinh-lai-tiet-kiem/');
+  ok(`savings ${W}`, (await val(p, '[data-savings] [data-value]')) === '6.000.000');
+  await p.close();
+
+  p = await page(1280, '/tinh-lai-vay/');
+  ok(`loan declining ${W}`, (await val(p, '[data-loan] [data-value]')) === '45.833.333', await val(p, '[data-loan] [data-value]'));
+  ok(`loan schedule rows ${W}`, (await p.locator('[data-rows] tr').count()) === 12);
+  await p.close();
+
+  p = await page(1280, '/dem-ngay/');
+  await p.locator('[data-start]').fill('2026-01-01');
+  await p.locator('[data-end]').fill('2026-02-17');
+  ok(`date diff ${W}`, (await val(p, '[data-datediff] [data-value]')) === '47 ngày' && (await val(p, '[data-weekdays]')) === '33 ngày');
+  await p.close();
+
+  p = await page(1280, '/tao-qr-chuyen-khoan/');
+  ok(`vietqr waits for account ${W}`, await p.locator('[data-png]').isDisabled());
+  await p.locator('[data-account]').fill('0123456789');
+  await p.locator('[data-message]').fill('Tiền ăn trưa');
+  await p.waitForTimeout(400);
+  ok(`vietqr ready ${W}`, !(await p.locator('[data-png]').isDisabled()) && (await val(p, '[data-sent]')).endsWith('Tien an trua'));
+  await p.locator('[data-account]').fill('01 23');
+  await p.waitForTimeout(400);
+  ok(`vietqr invalid account ${W}`, (await val(p, '[data-vietqr] [data-error]')).length > 0);
+  await p.close();
+
+  p = await page(1280, '/vong-quay-may-man/');
+  ok(`wheel result hidden before spin ${W}`, !(await p.locator('[data-wheel] [data-result]').isVisible()));
+  await p.locator('[data-spin]').click();
+  await p.waitForTimeout(4700);
+  const winner = await val(p, '[data-wheel] [data-value]');
+  ok(`wheel result ${W}`, ['Phở', 'Bún chả', 'Cơm tấm', 'Bánh mì', 'Bún bò', 'Mì Quảng'].includes(winner), winner);
+  await p.close();
+
+  p = await page(1280, '/chia-doi-ngau-nhien/');
+  await p.locator('[data-make]').click();
+  ok(`teams ${W}`, (await p.locator('[data-teams] [data-out] > div').count()) === 2);
+  await p.close();
+}
+
 // ---------- Sweep every sitemap page on mobile ----------
 {
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });

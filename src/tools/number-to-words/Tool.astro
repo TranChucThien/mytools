@@ -1,0 +1,62 @@
+---
+import { t } from '../../i18n';
+import type { Lang, ToolMeta } from '../../lib/types';
+import { S } from './strings';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+const { lang } = Astro.props;
+const s = S[lang];
+---
+
+<section class="tool" data-n2w data-config={JSON.stringify({ lang, s, invalid: t(lang).errInvalidNumber, copied: t(lang).copied })}>
+  <div class="field">
+    <label for="n2w-in">{s.input}</label>
+    <input id="n2w-in" type="text" inputmode="numeric" value={s.example} data-in />
+  </div>
+  <div class="actions">
+    {lang === 'vi' && <label class="check"><input type="checkbox" checked data-currency /> {s.currency}</label>}
+    <label class="check"><input type="checkbox" checked data-cap /> {s.capitalize}</label>
+  </div>
+  <span class="label" style="display:block;margin-top:12px">{s.output}</span>
+  <div class="result" aria-live="polite" style="margin-top:6px">
+    <span class="result-value" style="font-size:1.25rem" data-out></span>
+    <button type="button" class="btn btn-secondary btn-sm" data-copy>{t(lang).copy}</button>
+  </div>
+  <p class="error" data-error></p>
+</section>
+
+<script>
+  import { $, readConfig, setError, setupCopy } from '../../lib/client';
+  import { parseNumber } from '../../lib/number';
+  import type { Lang } from '../../lib/types';
+  import { toEnglishWords, toVietnameseWords } from './logic';
+  import type { NumberWordsStrings } from './strings';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-n2w]')) {
+    const { lang, s, invalid, copied } = readConfig<{ lang: Lang; s: NumberWordsStrings; invalid: string; copied: string }>(root);
+    const input = $<HTMLInputElement>(root, '[data-in]');
+    const out = $(root, '[data-out]');
+    const update = () => {
+      const n = parseNumber(input.value, lang);
+      const words = n === null ? null : lang === 'vi' ? toVietnameseWords(n) : toEnglishWords(n);
+      setError(input, input.value.trim() !== '' && words === null);
+      if (words === null) {
+        out.textContent = '-';
+        $(root, '[data-error]').textContent = input.value.trim() === '' ? '' : n === null ? invalid : s.errRange;
+        return;
+      }
+      $(root, '[data-error]').textContent = '';
+      let text = words;
+      if (root.querySelector<HTMLInputElement>('[data-currency]')?.checked) text += ' đồng';
+      if ($<HTMLInputElement>(root, '[data-cap]').checked) text = text.charAt(0).toLocaleUpperCase(lang) + text.slice(1);
+      out.textContent = text;
+    };
+    root.addEventListener('input', update);
+    root.addEventListener('change', update);
+    setupCopy($<HTMLButtonElement>(root, '[data-copy]'), () => (out.textContent === '-' ? '' : (out.textContent ?? '')), copied);
+    update();
+  }
+</script>

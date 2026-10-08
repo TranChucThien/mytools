@@ -2,16 +2,23 @@ import { meta as age } from '../tools/age/meta';
 import { meta as bmi } from '../tools/bmi/meta';
 import { meta as caseConverter } from '../tools/case-converter/meta';
 import { meta as coinFlip } from '../tools/coin-flip/meta';
+import { meta as dateDifference } from '../tools/date-difference/meta';
 import { meta as discount } from '../tools/discount/meta';
+import { meta as loan } from '../tools/loan/meta';
 import { meta as namePicker } from '../tools/name-picker/meta';
+import { meta as numberToWords } from '../tools/number-to-words/meta';
 import { meta as password } from '../tools/password/meta';
 import { meta as percentage } from '../tools/percentage/meta';
 import { meta as qrCode } from '../tools/qr-code/meta';
 import { meta as randomNumber } from '../tools/random-number/meta';
 import { meta as removeDiacritics } from '../tools/remove-diacritics/meta';
+import { meta as savingsInterest } from '../tools/savings-interest/meta';
 import { meta as slug } from '../tools/slug/meta';
+import { meta as teamGenerator } from '../tools/team-generator/meta';
 import { metas as converters } from '../tools/unit-converter/meta';
 import { meta as vat } from '../tools/vat/meta';
+import { meta as vietqr } from '../tools/vietqr/meta';
+import { meta as wheel } from '../tools/wheel/meta';
 import { meta as wordCounter } from '../tools/word-counter/meta';
 import { withBase } from './paths';
 import { LANGS, type Lang, type ToolMeta } from './types';
@@ -23,15 +30,22 @@ export const TOOLS: ToolMeta[] = [
   discount,
   bmi,
   vat,
+  savingsInterest,
+  loan,
+  dateDifference,
   ...converters,
   wordCounter,
   removeDiacritics,
   caseConverter,
   slug,
+  numberToWords,
+  wheel,
   randomNumber,
   namePicker,
+  teamGenerator,
   coinFlip,
   qrCode,
+  vietqr,
   password,
 ];
 

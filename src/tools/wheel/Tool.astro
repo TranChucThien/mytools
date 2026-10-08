@@ -1,0 +1,154 @@
+---
+import type { Lang, ToolMeta } from '../../lib/types';
+import { S } from './strings';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+const { lang } = Astro.props;
+const s = S[lang];
+---
+
+<section class="tool" data-wheel data-config={JSON.stringify({ s })}>
+  <div class="wheel-wrap">
+    <div class="wheel-pointer" aria-hidden="true"></div>
+    <canvas class="wheel-canvas" width="640" height="640" data-canvas aria-hidden="true"></canvas>
+  </div>
+  <div class="result" aria-live="polite" data-result hidden>
+    <span class="result-formula" style="width:auto">{s.result}</span>
+    <span class="result-value" data-value></span>
+  </div>
+  <p class="error" data-error></p>
+  <div class="actions" style="justify-content:center">
+    <button type="button" class="btn" data-spin>{s.spin}</button>
+  </div>
+  <div class="field" style="margin-top:16px">
+    <label for="wh-list">{s.list}</label>
+    <textarea id="wh-list" rows="6" data-list>{s.example}</textarea>
+  </div>
+  <label class="check"><input type="checkbox" data-remove /> {s.remove}</label>
+</section>
+
+<style>
+  .wheel-wrap {
+    position: relative;
+    width: min(360px, 100%);
+    margin: 0 auto;
+  }
+  .wheel-canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+    border-radius: 50%;
+    transition: transform 4.2s cubic-bezier(0.12, 0.8, 0.12, 1);
+  }
+  .wheel-pointer {
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    z-index: 1;
+    width: 0;
+    height: 0;
+    transform: translateX(-50%);
+    border-left: 14px solid transparent;
+    border-right: 14px solid transparent;
+    border-top: 26px solid var(--ink);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .wheel-canvas {
+      transition: none;
+    }
+  }
+</style>
+
+<script>
+  import { $, readConfig } from '../../lib/client';
+  import { parseNames } from '../name-picker/logic';
+  import { secureRandomBelow } from '../random-number/logic';
+  import { spinTarget } from './logic';
+  import type { WheelStrings } from './strings';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-wheel]')) {
+    const { s } = readConfig<{ s: WheelStrings }>(root);
+    const canvas = $<HTMLCanvasElement>(root, '[data-canvas]');
+    const list = $<HTMLTextAreaElement>(root, '[data-list]');
+    const spinBtn = $<HTMLButtonElement>(root, '[data-spin]');
+    const ctx = canvas.getContext('2d')!;
+    let rotation = 0;
+    let spinning = false;
+
+    const draw = () => {
+      const items = parseNames(list.value);
+      const css = getComputedStyle(root);
+      const colors = [css.getPropertyValue('--accent'), css.getPropertyValue('--accent-soft'), css.getPropertyValue('--surface-2')];
+      const ink = css.getPropertyValue('--ink');
+      const onAccent = css.getPropertyValue('--on-accent');
+      const r = canvas.width / 2;
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const n = Math.max(items.length, 1);
+      const slice = (Math.PI * 2) / n;
+      for (let i = 0; i < n; i++) {
+        // Slice i starts at 12 o'clock and runs clockwise (matches logic.ts).
+        const start = -Math.PI / 2 + i * slice;
+        ctx.beginPath();
+        ctx.moveTo(r, r);
+        ctx.arc(r, r, r - 4, start, start + slice);
+        ctx.closePath();
+        // Cycle three colors; avoid the last slice matching the first one.
+        let ci = i % 3;
+        if (n > 1 && i === n - 1 && ci === 0) ci = 1;
+        const color = colors[ci];
+        ctx.fillStyle = color!;
+        ctx.fill();
+        if (!items[i]) continue;
+        ctx.save();
+        ctx.translate(r, r);
+        ctx.rotate(start + slice / 2);
+        ctx.fillStyle = color === colors[0] ? onAccent : ink;
+        ctx.font = `600 ${Math.max(14, Math.min(28, 260 / n))}px 'Be Vietnam Pro', system-ui, sans-serif`;
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        const label = items[i]!.length > 18 ? items[i]!.slice(0, 17) + '…' : items[i]!;
+        ctx.fillText(label, r - 24, 0);
+        ctx.restore();
+      }
+    };
+
+    spinBtn.addEventListener('click', () => {
+      if (spinning) return;
+      const items = parseNames(list.value);
+      if (items.length < 2) {
+        $(root, '[data-error]').textContent = s.errFew;
+        return;
+      }
+      $(root, '[data-error]').textContent = '';
+      // The winner is decided by secure randomness first; the animation only shows it.
+      const winner = secureRandomBelow(items.length);
+      rotation = spinTarget(rotation, items.length, winner);
+      spinning = true;
+      spinBtn.disabled = true;
+      $(root, '[data-result]').hidden = true;
+      canvas.style.transform = `rotate(${rotation}deg)`;
+      const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+      setTimeout(
+        () => {
+          spinning = false;
+          spinBtn.disabled = false;
+          $(root, '[data-value]').textContent = items[winner]!;
+          $(root, '[data-result]').hidden = false;
+          if ($<HTMLInputElement>(root, '[data-remove]').checked) {
+            items.splice(winner, 1);
+            list.value = items.join('\n');
+            draw();
+          }
+        },
+        reduced ? 50 : 4300,
+      );
+    });
+    list.addEventListener('input', draw);
+    matchMedia('(prefers-color-scheme: dark)').addEventListener('change', draw);
+    document.fonts?.ready.then(draw);
+    draw();
+  }
+</script>

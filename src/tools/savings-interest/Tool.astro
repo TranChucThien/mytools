@@ -1,0 +1,77 @@
+---
+import { t } from '../../i18n';
+import type { Lang, ToolMeta } from '../../lib/types';
+import { S } from './strings';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+const { lang } = Astro.props;
+const s = S[lang];
+---
+
+<section class="tool" data-savings data-config={JSON.stringify({ lang, s, invalid: t(lang).errInvalidNumber, copied: t(lang).copied })}>
+  <div class="grid">
+    <div class="field">
+      <label for="sv-amount">{s.amount}</label>
+      <input id="sv-amount" type="text" inputmode="decimal" value={s.example.amount} data-amount />
+    </div>
+    <div class="field">
+      <label for="sv-rate">{s.rate}</label>
+      <input id="sv-rate" type="text" inputmode="decimal" value={s.example.rate} data-rate />
+    </div>
+    <div class="field">
+      <label for="sv-term">{s.term}</label>
+      <input id="sv-term" type="text" inputmode="numeric" value="12" data-term />
+    </div>
+  </div>
+  <div class="stack" style="margin-top:16px">
+    <span class="label" id="sv-method">{s.method}</span>
+    <div class="segmented" role="radiogroup" aria-labelledby="sv-method">
+      <label><input type="radio" name="sv-method" value="simple" checked data-method /><span>{s.simple}</span></label>
+      <label><input type="radio" name="sv-method" value="monthly" data-method /><span>{s.monthly}</span></label>
+    </div>
+  </div>
+  <div class="result" aria-live="polite">
+    <span class="result-value result-big" data-value></span>
+    <button type="button" class="btn btn-secondary btn-sm" data-copy>{t(lang).copy}</button>
+    <span class="result-formula">{s.interest}</span>
+  </div>
+  <p class="error" data-error></p>
+  <dl class="stats">
+    <div><dt>{s.total}</dt><dd data-total>-</dd></div>
+  </dl>
+</section>
+
+<script>
+  import { $, readConfig, setupCopy } from '../../lib/client';
+  import { formatNumber, parseNumber } from '../../lib/number';
+  import type { Lang } from '../../lib/types';
+  import { savings, type SavingsMethod } from './logic';
+  import type { SavingsStrings } from './strings';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-savings]')) {
+    const { lang, s, invalid, copied } = readConfig<{ lang: Lang; s: SavingsStrings; invalid: string; copied: string }>(root);
+    const num = (sel: string) => parseNumber($<HTMLInputElement>(root, sel).value, lang);
+    const set = (sel: string, text: string) => ($(root, sel).textContent = text);
+    const update = () => {
+      const [amount, rate, term] = [num('[data-amount]'), num('[data-rate]'), num('[data-term]')];
+      const method = root.querySelector<HTMLInputElement>('[data-method]:checked')!.value as SavingsMethod;
+      const r = amount !== null && rate !== null && term !== null ? savings(amount, rate, term, method) : null;
+      if (!r) {
+        set('[data-value]', '-');
+        set('[data-total]', '-');
+        set('[data-error]', amount === null || rate === null || term === null ? invalid : s.errTerm);
+        return;
+      }
+      set('[data-error]', '');
+      set('[data-value]', formatNumber(r.interest, lang, 2));
+      set('[data-total]', formatNumber(r.total, lang, 2));
+    };
+    root.addEventListener('input', update);
+    root.addEventListener('change', update);
+    setupCopy($<HTMLButtonElement>(root, '[data-copy]'), () => $(root, '[data-value]').textContent ?? '', copied);
+    update();
+  }
+</script>

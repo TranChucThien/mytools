@@ -1,0 +1,77 @@
+---
+import type { Lang, ToolMeta } from '../../lib/types';
+import { S } from './strings';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+const { lang } = Astro.props;
+const s = S[lang];
+---
+
+<section class="tool" data-teams data-config={JSON.stringify({ lang, s })}>
+  <div class="field">
+    <label for="tg-list">{s.list}</label>
+    <textarea id="tg-list" rows="7" data-list>{s.example}</textarea>
+  </div>
+  <div class="stack" style="margin-top:16px">
+    <div class="segmented" role="radiogroup" aria-label={s.byCount}>
+      <label><input type="radio" name="tg-mode" value="count" checked data-mode /><span>{s.byCount}</span></label>
+      <label><input type="radio" name="tg-mode" value="size" data-mode /><span>{s.bySize}</span></label>
+    </div>
+    <div class="field" style="max-width:220px">
+      <label for="tg-value" data-value-label>{s.count}</label>
+      <input id="tg-value" type="text" inputmode="numeric" value="2" data-value />
+    </div>
+  </div>
+  <div class="actions">
+    <button type="button" class="btn" data-make>{s.make}</button>
+    <button type="button" class="btn btn-secondary" data-copy hidden>{s.copy}</button>
+  </div>
+  <p class="error" data-error></p>
+  <dl class="stats" data-out aria-live="polite"></dl>
+</section>
+
+<script>
+  import { $, readConfig, setupCopy } from '../../lib/client';
+  import { parseNumber } from '../../lib/number';
+  import type { Lang } from '../../lib/types';
+  import { parseNames } from '../name-picker/logic';
+  import { makeTeams, type TeamMode } from './logic';
+  import type { TeamStrings } from './strings';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-teams]')) {
+    const { lang, s } = readConfig<{ lang: Lang; s: TeamStrings }>(root);
+    const out = $(root, '[data-out]');
+    const copyBtn = $<HTMLButtonElement>(root, '[data-copy]');
+    let text = '';
+    const mode = () => root.querySelector<HTMLInputElement>('[data-mode]:checked')!.value as TeamMode;
+    root.addEventListener('change', () => ($(root, '[data-value-label]').textContent = mode() === 'count' ? s.count : s.size));
+
+    $(root, '[data-make]').addEventListener('click', () => {
+      const r = makeTeams(parseNames($<HTMLTextAreaElement>(root, '[data-list]').value), mode(), parseNumber($<HTMLInputElement>(root, '[data-value]').value, lang) ?? 0);
+      if (!r.ok) {
+        $(root, '[data-error]').textContent = r.error === 'empty' ? s.errEmpty : s.errValue;
+        out.replaceChildren();
+        copyBtn.hidden = true;
+        return;
+      }
+      $(root, '[data-error]').textContent = '';
+      out.replaceChildren(
+        ...r.teams.map((team, i) => {
+          const box = document.createElement('div');
+          const dt = Object.assign(document.createElement('dt'), { textContent: `${s.team} ${i + 1} (${team.length})` });
+          const dd = Object.assign(document.createElement('dd'), { textContent: team.join(', ') });
+          dd.style.fontSize = '1rem';
+          dd.style.fontWeight = '600';
+          box.append(dt, dd);
+          return box;
+        }),
+      );
+      text = r.teams.map((team, i) => `${s.team} ${i + 1}: ${team.join(', ')}`).join('\n');
+      copyBtn.hidden = false;
+    });
+    setupCopy(copyBtn, () => text, s.copied);
+  }
+</script>

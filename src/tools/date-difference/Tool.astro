@@ -1,0 +1,75 @@
+---
+import type { Lang, ToolMeta } from '../../lib/types';
+import { S } from './strings';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+const { lang } = Astro.props;
+const s = S[lang];
+---
+
+<section class="tool" data-datediff data-config={JSON.stringify({ lang, s })}>
+  <div class="grid">
+    <div class="field">
+      <label for="dd-start">{s.start}</label>
+      <input id="dd-start" type="date" data-start />
+    </div>
+    <div class="field">
+      <label for="dd-end">{s.end}</label>
+      <input id="dd-end" type="date" data-end />
+    </div>
+  </div>
+  <label class="check"><input type="checkbox" data-include /> {s.includeEnd}</label>
+  <div class="result" aria-live="polite">
+    <span class="result-value result-big" data-value></span>
+    <span class="result-formula">{s.days}</span>
+  </div>
+  <p class="error" data-error></p>
+  <dl class="stats">
+    <div><dt>{s.weeks}</dt><dd data-weeks>-</dd></div>
+    <div><dt>{s.months}</dt><dd data-months>-</dd></div>
+    <div><dt>{s.weekdays}</dt><dd data-weekdays>-</dd></div>
+  </dl>
+</section>
+
+<script>
+  import { $, readConfig } from '../../lib/client';
+  import { formatNumber } from '../../lib/number';
+  import type { Lang } from '../../lib/types';
+  import { parseIsoDate } from '../age/logic';
+  import { dateDifference } from './logic';
+  import type { DateDiffStrings } from './strings';
+
+  const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-datediff]')) {
+    const { lang, s } = readConfig<{ lang: Lang; s: DateDiffStrings }>(root);
+    const startIn = $<HTMLInputElement>(root, '[data-start]');
+    const endIn = $<HTMLInputElement>(root, '[data-end]');
+    const today = new Date();
+    startIn.value = iso(today);
+    endIn.value = `${today.getFullYear()}-12-31`;
+    const u = (n: number, one: string, many: string) => `${formatNumber(n, lang)} ${n === 1 ? one : many}`;
+    const set = (sel: string, text: string) => ($(root, sel).textContent = text);
+    const update = () => {
+      const a = parseIsoDate(startIn.value);
+      const b = parseIsoDate(endIn.value);
+      if (!a || !b) {
+        for (const sel of ['[data-value]', '[data-weeks]', '[data-months]', '[data-weekdays]']) set(sel, '-');
+        set('[data-error]', s.errDate);
+        return;
+      }
+      const r = dateDifference(a, b, $<HTMLInputElement>(root, '[data-include]').checked);
+      set('[data-error]', '');
+      set('[data-value]', u(r.days, s.unitDay, s.unitDays));
+      set('[data-weeks]', `${u(r.weeks, s.unitWeek, s.unitWeeks)} ${u(r.extraDays, s.unitDay, s.unitDays)}`);
+      set('[data-months]', `${u(r.months, s.unitMonth, s.unitMonths)} ${u(r.monthDays, s.unitDay, s.unitDays)}`);
+      set('[data-weekdays]', u(r.weekdays, s.unitDay, s.unitDays));
+    };
+    root.addEventListener('input', update);
+    root.addEventListener('change', update);
+    update();
+  }
+</script>

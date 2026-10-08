@@ -85,6 +85,11 @@ canvas {
   }
 }
 
+/* Component display rules must never override the hidden attribute. */
+[hidden] {
+  display: none !important;
+}
+
 .sr-only {
   position: absolute;
   width: 1px;

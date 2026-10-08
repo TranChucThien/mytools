@@ -1,0 +1,98 @@
+---
+import { t } from '../../i18n';
+import type { Lang, ToolMeta } from '../../lib/types';
+import { S } from './strings';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+const { lang } = Astro.props;
+const s = S[lang];
+---
+
+<section class="tool" data-loan data-config={JSON.stringify({ lang, s, invalid: t(lang).errInvalidNumber })}>
+  <div class="grid">
+    <div class="field">
+      <label for="ln-amount">{s.amount}</label>
+      <input id="ln-amount" type="text" inputmode="decimal" value={s.example.amount} data-amount />
+    </div>
+    <div class="field">
+      <label for="ln-rate">{s.rate}</label>
+      <input id="ln-rate" type="text" inputmode="decimal" value={s.example.rate} data-rate />
+    </div>
+    <div class="field">
+      <label for="ln-term">{s.term}</label>
+      <input id="ln-term" type="text" inputmode="numeric" value="12" data-term />
+    </div>
+  </div>
+  <div class="stack" style="margin-top:16px">
+    <span class="label" id="ln-method">{s.method}</span>
+    <div class="segmented" role="radiogroup" aria-labelledby="ln-method">
+      <label><input type="radio" name="ln-method" value="declining" checked data-method /><span>{s.declining}</span></label>
+      <label><input type="radio" name="ln-method" value="annuity" data-method /><span>{s.annuity}</span></label>
+      <label><input type="radio" name="ln-method" value="flat" data-method /><span>{s.flat}</span></label>
+    </div>
+  </div>
+  <div class="result" aria-live="polite">
+    <span class="result-value result-big" data-value></span>
+    <span class="result-formula">{s.first}</span>
+  </div>
+  <p class="error" data-error></p>
+  <dl class="stats">
+    <div><dt>{s.totalInterest}</dt><dd data-interest>-</dd></div>
+    <div><dt>{s.totalPayment}</dt><dd data-total>-</dd></div>
+  </dl>
+  <details class="schedule" style="margin-top:16px">
+    <summary class="btn btn-secondary btn-sm">{s.schedule}</summary>
+    <div class="prose" style="max-width:none">
+      <table>
+        <thead><tr>{s.cols.map((c) => <th scope="col">{c}</th>)}</tr></thead>
+        <tbody data-rows></tbody>
+      </table>
+    </div>
+  </details>
+</section>
+
+<script>
+  import { $, readConfig } from '../../lib/client';
+  import { formatNumber, parseNumber } from '../../lib/number';
+  import type { Lang } from '../../lib/types';
+  import { loanSchedule, type LoanMethod } from './logic';
+  import type { LoanStrings } from './strings';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-loan]')) {
+    const { lang, s, invalid } = readConfig<{ lang: Lang; s: LoanStrings; invalid: string }>(root);
+    const num = (sel: string) => parseNumber($<HTMLInputElement>(root, sel).value, lang);
+    const set = (sel: string, text: string) => ($(root, sel).textContent = text);
+    const f = (n: number) => formatNumber(n, lang, 0);
+    const update = () => {
+      const [amount, rate, term] = [num('[data-amount]'), num('[data-rate]'), num('[data-term]')];
+      const method = root.querySelector<HTMLInputElement>('[data-method]:checked')!.value as LoanMethod;
+      const r = amount !== null && rate !== null && term !== null ? loanSchedule(amount, rate, term, method) : null;
+      const tbody = $(root, '[data-rows]');
+      if (!r) {
+        for (const sel of ['[data-value]', '[data-interest]', '[data-total]']) set(sel, '-');
+        set('[data-error]', amount === null || rate === null || term === null ? invalid : s.errTerm);
+        tbody.replaceChildren();
+        return;
+      }
+      set('[data-error]', '');
+      set('[data-value]', f(r.rows[0]!.payment));
+      set('[data-interest]', f(r.totalInterest));
+      set('[data-total]', f(r.totalPayment));
+      tbody.replaceChildren(
+        ...r.rows.map((row) => {
+          const tr = document.createElement('tr');
+          for (const v of [String(row.period), f(row.principal), f(row.interest), f(row.payment), f(row.balance)]) {
+            tr.append(Object.assign(document.createElement('td'), { textContent: v }));
+          }
+          return tr;
+        }),
+      );
+    };
+    root.addEventListener('input', update);
+    root.addEventListener('change', update);
+    update();
+  }
+</script>

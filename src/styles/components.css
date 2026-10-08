@@ -772,11 +772,11 @@ input[type='color'] {
 }
 .stats dd {
   margin: 2px 0 0;
-  font-size: 1.25rem;
+  font-size: clamp(1.0625rem, 4.2vw, 1.25rem);
   font-weight: 800;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
-  word-break: break-word;
+  overflow-wrap: break-word;
 }
 
 /* Read-only output fields. */

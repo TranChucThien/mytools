@@ -1,4 +1,5 @@
 ---
+import { withBase } from '../lib/paths';
 import { absoluteUrl, SITE_NAME } from '../lib/seo';
 import type { Lang } from '../lib/types';
 
@@ -16,7 +17,7 @@ interface Props {
 
 const { lang, title, description, path, alternates, jsonLd = [], noindex = false } = Astro.props;
 const canonical = absoluteUrl(path);
-const ogImage = absoluteUrl('/og-default.png');
+const ogImage = absoluteUrl(withBase('og-default.png'));
 const ogLocale = lang === 'vi' ? 'vi_VN' : 'en_US';
 ---
 
@@ -34,7 +35,7 @@ const ogLocale = lang === 'vi' ? 'vi_VN' : 'en_US';
     </>
   )
 }
-<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+<link rel="icon" href={withBase('favicon.svg')} type="image/svg+xml" />
 <meta name="theme-color" content="#0b7a5c" />
 
 <meta property="og:type" content="website" />

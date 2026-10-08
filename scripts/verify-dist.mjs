@@ -3,7 +3,10 @@
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, sep } from 'node:path';
 
-const SITE = 'https://congcumienphi.id.vn';
+// Must match the env used for `astro build` (see astro.config.mjs).
+const SITE = (process.env.SITE_URL || 'https://congcumienphi.id.vn').replace(/\/+$/, '');
+const BASE = ('/' + (process.env.BASE_PATH || '/').replace(/^\/+|\/+$/g, '') + '/').replace('//', '/');
+const ROOT = SITE + BASE; // e.g. https://user.github.io/mytools/
 const DIST = new URL('../dist/', import.meta.url).pathname;
 const problems = [];
 const fail = (page, msg) => problems.push(`${page}: ${msg}`);
@@ -16,17 +19,21 @@ function htmlFiles(dir) {
   });
 }
 
-/** dist/foo/index.html → /foo/ */
+/** dist/foo/index.html → <BASE>foo/ */
 function urlPath(file) {
   const rel = relative(DIST, file).split(sep).join('/');
-  return '/' + rel.replace(/index\.html$/, '');
+  return BASE + rel.replace(/index\.html$/, '');
+}
+
+/** Root-relative URL (starting with BASE) → file path inside dist/, or null if outside the site. */
+function distPath(href) {
+  return href.startsWith(BASE) ? join(DIST, href.slice(BASE.length)) : null;
 }
 
 /** Existing page for an absolute URL on this site, or null. */
 function pageExists(url) {
-  if (!url.startsWith(SITE + '/')) return false;
-  const path = url.slice(SITE.length);
-  return existsSync(join(DIST, path, 'index.html'));
+  if (!url.startsWith(ROOT)) return false;
+  return existsSync(join(DIST, url.slice(ROOT.length), 'index.html'));
 }
 
 const all = (html, re) => [...html.matchAll(re)];
@@ -82,15 +89,17 @@ for (const file of pages) {
     }
   }
 
-  for (const m of all(html, /<a [^>]*href="(\/[^"#?]*)"/g)) {
+  // Every root-relative href/src (links, scripts, styles, icons) must resolve inside dist/.
+  for (const m of all(html, /(?:href|src)="(\/[^"#?]*)"/g)) {
     const href = m[1];
-    if (!existsSync(join(DIST, href, 'index.html')) && !existsSync(join(DIST, href))) {
-      fail(path, `broken internal link ${href}`);
+    const file = distPath(href);
+    if (!file || (!existsSync(join(file, 'index.html')) && !existsSync(file))) {
+      fail(path, `broken internal reference ${href}`);
     }
   }
 
   const ogImage = html.match(/<meta property="og:image" content="([^"]*)"/)?.[1];
-  if (!ogImage?.startsWith(SITE) || !existsSync(join(DIST, ogImage.slice(SITE.length)))) {
+  if (!ogImage?.startsWith(ROOT) || !existsSync(join(DIST, ogImage.slice(ROOT.length)))) {
     fail(path, `og:image missing or not found: ${ogImage}`);
   }
 

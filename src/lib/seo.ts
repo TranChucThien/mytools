@@ -1,7 +1,8 @@
 import { homePath, toolPath } from './registry';
 import type { FaqItem, Lang, ToolMeta } from './types';
 
-export const SITE = 'https://congcumienphi.id.vn';
+/** Site origin without trailing slash; Astro injects the configured `site`. */
+export const SITE = (import.meta.env.SITE || 'https://congcumienphi.id.vn').replace(/\/+$/, '');
 export const SITE_NAME = 'Công Cụ Miễn Phí';
 
 export function absoluteUrl(path: string): string {

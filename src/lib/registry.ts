@@ -2,6 +2,7 @@ import { meta as percentage } from '../tools/percentage/meta';
 import { meta as qrCode } from '../tools/qr-code/meta';
 import { meta as randomNumber } from '../tools/random-number/meta';
 import { metas as converters } from '../tools/unit-converter/meta';
+import { withBase } from './paths';
 import { LANGS, type Lang, type ToolMeta } from './types';
 
 /** Every tool page on the site. Add a tool by importing its meta here. */
@@ -12,7 +13,7 @@ export function getTool(id: string, tools: ToolMeta[] = TOOLS): ToolMeta | undef
 }
 
 export function homePath(lang: Lang): string {
-  return lang === 'vi' ? '/' : '/en/';
+  return withBase(lang === 'vi' ? '' : 'en/');
 }
 
 export function toolPath(tool: ToolMeta, lang: Lang): string {

@@ -2,14 +2,16 @@
 import { en } from '../i18n/en';
 import { vi } from '../i18n/vi';
 import BaseLayout from '../layouts/BaseLayout.astro';
+import { withBase } from '../lib/paths';
+import { homePath } from '../lib/registry';
 ---
 
-<BaseLayout lang="vi" title={`404 – ${vi.notFoundTitle}`} description={vi.notFoundText} path="/404/" noindex>
+<BaseLayout lang="vi" title={`404 – ${vi.notFoundTitle}`} description={vi.notFoundText} path={withBase('404/')} noindex>
   <h1>404 – {vi.notFoundTitle}</h1>
   <p class="lead">{vi.notFoundText}</p>
-  <p><a class="btn" href="/">{vi.backHome}</a></p>
+  <p><a class="btn" href={homePath('vi')}>{vi.backHome}</a></p>
   <hr />
   <h2 lang="en">{en.notFoundTitle}</h2>
   <p lang="en">{en.notFoundText}</p>
-  <p lang="en"><a href="/en/">{en.backHome}</a></p>
+  <p lang="en"><a href={homePath('en')}>{en.backHome}</a></p>
 </BaseLayout>

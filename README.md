@@ -35,6 +35,15 @@ Pages, home listing, footer, related links, hreflang and `sitemap.xml` update au
 
 Pushing to `main` runs `.github/workflows/deploy.yml`: test → type-check → build → verify → deploy to GitHub Pages. Pull requests run the same checks without deploying (`ci.yml`).
 
+The site URL and base path come from `actions/configure-pages`, so the same workflow works on `https://tranchucthien.github.io/mytools/` (base `/mytools/`) and, once the custom domain is set, on `https://congcumienphi.id.vn/` (base `/`). Locally the build defaults to the custom domain at `/`; to reproduce the github.io build:
+
+```bash
+SITE_URL=https://tranchucthien.github.io BASE_PATH=/mytools npm run build
+SITE_URL=https://tranchucthien.github.io BASE_PATH=/mytools npm run verify
+```
+
+In code, never hard-code root paths – use `homePath()` / `toolPath()` from `src/lib/registry.ts` or `withBase()` from `src/lib/paths.ts`. `npm run verify` fails on any `href`/`src` that does not resolve inside the site.
+
 ### One-time setup
 
 1. **GitHub → Settings → Pages → Build and deployment → Source: GitHub Actions.**

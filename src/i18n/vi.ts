@@ -1,0 +1,79 @@
+export const vi = {
+  siteName: 'Công Cụ Miễn Phí',
+  siteTagline: 'Công cụ online miễn phí – nhanh, không cần đăng ký',
+  homeTitle: 'Công Cụ Miễn Phí – Công cụ online miễn phí, không cần đăng ký',
+  homeDescription:
+    'Bộ công cụ online miễn phí: tính phần trăm, đổi đơn vị, tạo số ngẫu nhiên, tạo mã QR. Chạy ngay trên trình duyệt, không cần đăng ký, không quảng cáo phiền.',
+  homeH1: 'Công cụ online miễn phí',
+  homeIntro:
+    'Các công cụ nhỏ cho việc hằng ngày – mở ra là dùng được ngay, chạy hoàn toàn trên trình duyệt của bạn, không cần tài khoản.',
+  home: 'Trang chủ',
+  categories: {
+    calculator: 'Máy tính',
+    converter: 'Chuyển đổi đơn vị',
+    random: 'Ngẫu nhiên',
+    generator: 'Tạo mã',
+  },
+  badgeFree: 'Miễn phí',
+  badgeNoSignup: 'Không cần đăng ký',
+  badgeLocal: 'Chạy trên trình duyệt',
+  faqHeading: 'Câu hỏi thường gặp',
+  relatedHeading: 'Công cụ liên quan',
+  copy: 'Sao chép',
+  copied: 'Đã sao chép!',
+  noscript: 'Công cụ này cần bật JavaScript để hoạt động.',
+  langSwitchLabel: 'English',
+  notFoundTitle: 'Không tìm thấy trang',
+  notFoundText: 'Trang bạn tìm không tồn tại hoặc đã được chuyển đi.',
+  backHome: 'Về trang chủ',
+  footerNote: 'Mọi công cụ đều miễn phí và chạy trên trình duyệt – dữ liệu của bạn không được gửi đi đâu.',
+  errInvalidNumber: 'Vui lòng nhập một số hợp lệ.',
+
+  // Percentage
+  pctMode1: 'Tính X% của Y',
+  pctMode2: 'X là bao nhiêu % của Y',
+  pctMode3: 'Phần trăm tăng/giảm',
+  pctOf: '% của',
+  pctIs: 'là',
+  pctWhatPercentOf: 'là bao nhiêu % của',
+  pctFrom: 'Từ',
+  pctTo: 'đến',
+  pctIncrease: 'Tăng',
+  pctDecrease: 'Giảm',
+  pctNoChange: 'Không đổi',
+  pctDivZero: 'Không thể chia cho 0.',
+  pctChangeFromZero: 'Không tính được phần trăm thay đổi khi giá trị ban đầu là 0.',
+  formula: 'Công thức',
+
+  // Converter
+  convSwap: 'Đổi chiều',
+  convTable: 'Bảng quy đổi',
+
+  // Random
+  rndMin: 'Từ số',
+  rndMax: 'Đến số',
+  rndCount: 'Số lượng',
+  rndUnique: 'Không trùng lặp',
+  rndGenerate: 'Tạo số',
+  rndErrMinMax: '“Từ số” phải nhỏ hơn hoặc bằng “Đến số”.',
+  rndErrCount: 'Số lượng phải là số nguyên từ 1 đến 1.000.',
+  rndErrRange: 'Vui lòng nhập số nguyên trong khoảng cho phép.',
+  rndErrTooMany: 'Khoảng số quá nhỏ để lấy ngần ấy số không trùng nhau.',
+
+  // QR
+  qrText: 'Nội dung (link hoặc văn bản)',
+  qrPlaceholder: 'https://vi-du.com',
+  qrSize: 'Kích thước (px)',
+  qrFg: 'Màu mã',
+  qrBg: 'Màu nền',
+  qrEcc: 'Mức sửa lỗi',
+  qrDownloadPng: 'Tải PNG',
+  qrDownloadSvg: 'Tải SVG',
+  qrErrEmpty: 'Nhập nội dung để tạo mã QR.',
+  qrErrTooLong: 'Nội dung quá dài (tối đa 2.000 ký tự).',
+  qrErrRender: 'Không tạo được mã QR với nội dung này. Hãy thử rút gọn hoặc giảm mức sửa lỗi.',
+  qrPrivacy: 'Mã QR được tạo ngay trên trình duyệt – nội dung bạn nhập không được gửi lên máy chủ nào.',
+};
+
+type Widen<T> = { [K in keyof T]: T[K] extends string ? string : Widen<T[K]> };
+export type UiStrings = Widen<typeof vi>;

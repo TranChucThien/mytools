@@ -1,7 +1,7 @@
 ---
 faq:
   - q: How many pounds are in 1 kg?
-    a: 1 kilogram is about 2.20462 pounds. The exact value is 1 kg = 2.20462262185 lbs.
+    a: 1 kilogram is about 2.20462 pounds. More precisely, since 1 lb = 0.45359237 kg, 1 kg = 1 ÷ 0.45359237 ≈ 2.2046226218 lbs.
   - q: What's a quick way to convert kg to lbs in my head?
     a: Double the kilograms and add 10% of the result. For 60 kg, 60 × 2 = 120, plus 12 is 132 lbs (the exact answer is 132.28 lbs).
   - q: Why is pound abbreviated "lbs"?
@@ -18,7 +18,7 @@ Type a value in the **kg** box and the weight in pounds appears instantly in the
 
 ## KG to LBS formula
 
-> **lbs = kg × 2.20462262185**
+> **lbs = kg ÷ 0.45359237** (≈ kg × 2.20462)
 
 The factor comes from the international definition 1 lb = 0.45359237 kg, so 1 kg = 1 ÷ 0.45359237 ≈ 2.20462 lbs.
 

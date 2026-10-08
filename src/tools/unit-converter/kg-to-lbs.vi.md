@@ -1,7 +1,7 @@
 ---
 faq:
   - q: 1 kg bằng bao nhiêu lbs?
-    a: 1 kg bằng khoảng 2,20462 lbs (pound). Con số chính xác là 1 kg = 2,20462262185 lbs.
+    a: 1 kg bằng khoảng 2,20462 lbs (pound). Chính xác hơn, vì 1 lbs = 0,45359237 kg nên 1 kg = 1 ÷ 0,45359237 ≈ 2,2046226218 lbs.
   - q: Cách đổi kg sang lbs nhanh bằng cách nhẩm?
     a: Nhân số kg với 2 rồi cộng thêm 10% của kết quả. Ví dụ 60 kg × 2 = 120, cộng 12 được 132 lbs (con số chính xác là 132,28 lbs).
   - q: Lbs là đơn vị gì?
@@ -18,7 +18,7 @@ Nhập số kilôgam vào ô **kg**, số pound tương ứng hiện ngay ở ô
 
 ## Công thức đổi kg sang lbs
 
-> **lbs = kg × 2,20462262185**
+> **lbs = kg ÷ 0,45359237** (≈ kg × 2,20462)
 
 Hệ số này lấy từ định nghĩa quốc tế: 1 pound = 0,45359237 kg, nên 1 kg = 1 ÷ 0,45359237 ≈ 2,20462 lbs.
 

@@ -22,8 +22,8 @@ export interface UnitPair {
 export const PAIRS: UnitPair[] = [
   {
     id: 'kg-lbs',
-    // International avoirdupois pound: 1 lb = 0.45359237 kg exactly.
-    factor: 2.20462262185,
+    // International avoirdupois pound is defined as exactly 0.45359237 kg.
+    factor: 1 / 0.45359237,
     from: { symbol: 'kg', name: { vi: 'kilôgam', en: 'kilograms' } },
     to: { symbol: 'lbs', name: { vi: 'pound', en: 'pounds' } },
     ids: { forward: 'kg-to-lbs', reverse: 'lbs-to-kg' },

@@ -1,4 +1,5 @@
 ---
+import Quip from '../../components/Quip.astro';
 import { t } from '../../i18n';
 import { DEFAULT_SIZE, MAX_SIZE, MAX_TEXT_LENGTH, MIN_SIZE } from './logic';
 import type { Lang, ToolMeta } from '../../lib/types';
@@ -10,7 +11,7 @@ interface Props {
 
 const { lang } = Astro.props;
 const s = t(lang);
-const config = { s: { empty: s.qrErrEmpty, tooLong: s.qrErrTooLong, render: s.qrErrRender } };
+const config = { s: { empty: s.qrErrEmpty, tooLong: s.qrErrTooLong, render: s.qrErrRender }, quips: s.qrQuips };
 ---
 
 <section class="tool" data-qr data-config={JSON.stringify(config)}>
@@ -48,6 +49,7 @@ const config = { s: { empty: s.qrErrEmpty, tooLong: s.qrErrTooLong, render: s.qr
     <canvas data-canvas aria-label="QR code" role="img"></canvas>
   </div>
   <p class="error" data-error aria-live="polite"></p>
+  <Quip icon="qrcode" />
   <div class="actions">
     <button type="button" class="btn" data-png>{s.qrDownloadPng}</button>
     <button type="button" class="btn btn-secondary" data-svg>{s.qrDownloadSvg}</button>
@@ -73,17 +75,30 @@ const config = { s: { empty: s.qrErrEmpty, tooLong: s.qrErrTooLong, render: s.qr
 
 <script>
   import QRCode from 'qrcode';
-  import { $, debounce, readConfig } from '../../lib/client';
+  import { $, debounce, readConfig, setQuip } from '../../lib/client';
+  import type { UiStrings } from '../../i18n';
   import { clampSize, validateQrInput } from './logic';
 
   interface Config {
     s: Record<'empty' | 'tooLong' | 'render', string>;
+    quips: UiStrings['qrQuips'];
+  }
+
+  /** Guess what kind of content the code holds, for the one-liner under it. */
+  function kind(text: string): keyof UiStrings['qrQuips'] {
+    const v = text.trim();
+    if (/^WIFI:/i.test(v)) return 'wifi';
+    if (/^(mailto:)?[^\s@]+@[^\s@]+\.[^\s@]+$/i.test(v)) return 'email';
+    if (/^(tel:)?\+?[\d\s.()-]{8,20}$/i.test(v)) return 'phone';
+    if (v.length > 300) return 'long';
+    if (/^https?:\/\//i.test(v)) return 'url';
+    return 'text';
   }
 
   type Ecc = 'L' | 'M' | 'Q' | 'H';
 
   for (const root of document.querySelectorAll<HTMLElement>('[data-qr]')) {
-    const { s } = readConfig<Config>(root);
+    const { s, quips } = readConfig<Config>(root);
     const textIn = $<HTMLTextAreaElement>(root, '[data-text]');
     const sizeIn = $<HTMLInputElement>(root, '[data-size]');
     const eccIn = $<HTMLSelectElement>(root, '[data-ecc]');
@@ -111,14 +126,17 @@ const config = { s: { empty: s.qrErrEmpty, tooLong: s.qrErrTooLong, render: s.qr
       const v = validateQrInput(textIn.value);
       if (!v.ok) {
         errorEl.textContent = s[v.error];
+        setQuip(root, '');
         return setReady(false);
       }
       try {
         await QRCode.toCanvas(canvas, textIn.value, options());
         errorEl.textContent = '';
+        setQuip(root, quips[kind(textIn.value)]);
         setReady(true);
       } catch {
         errorEl.textContent = s.render;
+        setQuip(root, '');
         setReady(false);
       }
     };

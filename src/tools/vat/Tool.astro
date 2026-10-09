@@ -1,4 +1,5 @@
 ---
+import Quip from '../../components/Quip.astro';
 import { t } from '../../i18n';
 import type { Lang, ToolMeta } from '../../lib/types';
 import { S } from './strings';
@@ -9,7 +10,12 @@ interface Props {
 }
 const { lang } = Astro.props;
 const s = S[lang];
-const config = { lang, invalid: t(lang).errInvalidNumber, copied: t(lang).copied };
+const config = {
+  lang,
+  invalid: t(lang).errInvalidNumber,
+  copied: t(lang).copied,
+  quips: { zero: s.quipZero, add: s.quipAdd, remove: s.quipRemove },
+};
 ---
 
 <section class="tool" data-vat data-config={JSON.stringify(config)}>
@@ -50,16 +56,23 @@ const config = { lang, invalid: t(lang).errInvalidNumber, copied: t(lang).copied
     <div><dt>{s.net}</dt><dd data-net>-</dd></div>
     <div><dt>{s.gross}</dt><dd data-gross>-</dd></div>
   </dl>
+  <Quip icon="receipt-tax" />
 </section>
 
 <script>
-  import { $, readConfig, setError, setupCopy } from '../../lib/client';
+  import { $, readConfig, setError, setQuip, setupCopy } from '../../lib/client';
   import { formatNumber, parseNumber } from '../../lib/number';
+  import { pick } from '../../lib/quip';
   import type { Lang } from '../../lib/types';
   import { addVat, removeVat } from './logic';
 
   for (const root of document.querySelectorAll<HTMLElement>('[data-vat]')) {
-    const { lang, invalid, copied } = readConfig<{ lang: Lang; invalid: string; copied: string }>(root);
+    const { lang, invalid, copied, quips } = readConfig<{
+      lang: Lang;
+      invalid: string;
+      copied: string;
+      quips: { zero: string; add: string[]; remove: string[] };
+    }>(root);
     const amountIn = $<HTMLInputElement>(root, '[data-amount]');
     const customIn = $<HTMLInputElement>(root, '[data-custom]');
     const customWrap = $(root, '[data-custom-wrap]');
@@ -79,6 +92,7 @@ const config = { lang, invalid: t(lang).errInvalidNumber, copied: t(lang).copied
         for (const sel of ['[data-value]', '[data-vat-amount]', '[data-net]', '[data-gross]']) set(sel, '-');
         set('[data-formula]', '');
         set('[data-error]', amountIn.value.trim() ? invalid : '');
+        setQuip(root, '');
         return;
       }
       set('[data-error]', '');
@@ -86,6 +100,7 @@ const config = { lang, invalid: t(lang).errInvalidNumber, copied: t(lang).copied
       set('[data-net]', f(r.net));
       set('[data-gross]', f(r.gross));
       const pct = `${formatNumber(rate!, lang)}%`;
+      setQuip(root, r.vat === 0 ? quips.zero : pick(mode === 'add' ? quips.add : quips.remove, Math.round(amount!)));
       if (mode === 'add') {
         set('[data-value]', f(r.gross));
         set('[data-formula]', `${f(r.net)} × (1 + ${pct}) = ${f(r.gross)}`);

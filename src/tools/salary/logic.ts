@@ -12,6 +12,8 @@ export interface BracketTax {
   from: number;
   to: number;
   rate: number;
+  /** Part of the taxable income that falls inside this bracket. */
+  portion: number;
   tax: number;
 }
 
@@ -34,7 +36,7 @@ export function progressiveTax(taxable: number): { total: number; byBracket: Bra
   let from = 0;
   const byBracket = R.brackets.map(({ upTo, rate }) => {
     const portion = Math.max(0, Math.min(taxable, upTo) - from);
-    const row = { from, to: upTo, rate, tax: round(portion * rate) };
+    const row = { from, to: upTo, rate, portion, tax: round(portion * rate) };
     from = upTo;
     return row;
   });

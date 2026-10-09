@@ -12,6 +12,8 @@ faq:
     a: "Kết quả chính xác trong khoảng từ năm 1900 đến năm 2100. Công cụ dùng thuật toán thiên văn của Hồ Ngọc Đức, tính điểm sóc và tiết khí để xác định ngày đầu tháng và tháng nhuận."
   - q: "Công cụ đổi ngày âm dương lịch có miễn phí không?"
     a: "Hoàn toàn miễn phí, không cần đăng ký. Mọi phép tính chạy ngay trên trình duyệt của bạn."
+  - q: "Xem giờ hoàng đạo và Can Chi của giờ như thế nào?"
+    a: "Công cụ luôn liệt kê 6 giờ hoàng đạo của ngày. Nhập thêm Giờ (tùy chọn) để xem Can Chi của giờ đó và giờ đó có phải giờ hoàng đạo không. Ví dụ ngày 17/02/2026 (ngày Nhâm Tuất) có giờ hoàng đạo là Dần, Thìn, Tỵ, Thân, Dậu, Hợi; lúc 09:00 là giờ Ất Tỵ. Giờ Tý bắt đầu từ 23:00 nên 23:30 đã tính sang giờ Nhâm Tý của ngày hôm sau."
 ---
 
 ## Cách đổi ngày âm dương lịch

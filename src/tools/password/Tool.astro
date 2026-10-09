@@ -1,4 +1,5 @@
 ---
+import Quip from '../../components/Quip.astro';
 import { t } from '../../i18n';
 import type { Lang, ToolMeta } from '../../lib/types';
 import { MAX_LENGTH, MIN_LENGTH } from './logic';
@@ -26,6 +27,7 @@ const options = [
     <button type="button" class="btn btn-secondary btn-sm" data-copy>{t(lang).copy}</button>
     <span class="result-formula" data-strength></span>
   </div>
+  <Quip icon="shield-lock" />
   <div class="field" style="margin-top:16px">
     <label for="pw-len">{s.length}: <span data-len-label>16</span></label>
     <input id="pw-len" type="range" min={MIN_LENGTH} max={MAX_LENGTH} value="16" data-length />
@@ -46,8 +48,9 @@ const options = [
 </section>
 
 <script>
-  import { $, readConfig, setupCopy } from '../../lib/client';
+  import { $, readConfig, setQuip, setupCopy } from '../../lib/client';
   import { formatNumber } from '../../lib/number';
+  import { band } from '../../lib/quip';
   import type { Lang } from '../../lib/types';
   import { generatePassword, strength, type PasswordOptions } from './logic';
   import type { PasswordStrings } from './strings';
@@ -73,12 +76,14 @@ const options = [
         out.textContent = '-';
         $(root, '[data-strength]').textContent = '';
         $(root, '[data-error]').textContent = r.error === 'noSets' ? s.errSets : s.errLength;
+        setQuip(root, '');
         return;
       }
       $(root, '[data-error]').textContent = '';
       out.textContent = r.password;
       $(root, '[data-strength]').textContent =
         `${s.strength}: ${s.levels[strength(r.bits)]} (${formatNumber(r.bits, lang, 0)} ${s.bits})`;
+      setQuip(root, band(r.bits, s.quips));
     };
     root.addEventListener('input', generate);
     $(root, '[data-generate]').addEventListener('click', generate);

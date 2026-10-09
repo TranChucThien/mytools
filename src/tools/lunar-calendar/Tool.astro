@@ -1,4 +1,8 @@
 ---
+import DateField from '../../components/DateField.astro';
+import Quip from '../../components/Quip.astro';
+import Ticker from '../../components/Ticker.astro';
+import TimeField from '../../components/TimeField.astro';
 import type { Lang, ToolMeta } from '../../lib/types';
 import { S } from './strings';
 
@@ -15,11 +19,9 @@ const s = S[lang];
     <label><input type="radio" name="lc-mode" value="s2l" checked data-mode /><span>{s.s2l}</span></label>
     <label><input type="radio" name="lc-mode" value="l2s" data-mode /><span>{s.l2s}</span></label>
   </div>
-  <div class="grid" style="margin-top:16px" data-solar-fields>
-    <div class="field">
-      <label for="lc-solar">{s.solar}</label>
-      <input id="lc-solar" type="date" min="1901-01-01" max="2099-12-31" data-solar />
-    </div>
+  <div class="dt-row" style="margin-top:16px" data-solar-fields>
+    <DateField id="lc-solar" label={s.solar} lang={lang} name="solar" min="1901-01-01" max="2099-12-31" />
+    <TimeField id="lc-time" label={s.time} lang={lang} name="time" />
   </div>
   <div data-lunar-fields hidden>
     <div class="grid" style="margin-top:16px">
@@ -47,60 +49,121 @@ const s = S[lang];
     <div><dt>{s.canChi} · {s.year}</dt><dd data-cc-year>-</dd></div>
     <div><dt>{s.canChi} · {s.month}</dt><dd data-cc-month>-</dd></div>
     <div><dt>{s.canChi} · {s.day}</dt><dd data-cc-day>-</dd></div>
+    <div data-hour-stat hidden><dt>{s.canChi} · {s.hour}</dt><dd data-cc-hour>-</dd></div>
   </dl>
+  <p class="label" style="margin:18px 0 8px">{s.goodHours}</p>
+  <ul class="pills" data-good-hours></ul>
+  <Quip icon="moon" />
+  <Ticker lang={lang} icon="confetti" />
 </section>
 
 <script>
-  import { $, readConfig } from '../../lib/client';
+  import { $, readConfig, setQuip } from '../../lib/client';
+  import { formatDateWithWeekday, localNow, parseTimeText, wallTime, type Ymd } from '../../lib/date';
+  import { everySecond, readDate, renderTicker, setupDateFields, writeDate } from '../../lib/date-client';
+  import { fill, pick } from '../../lib/quip';
   import type { Lang } from '../../lib/types';
-  import { parseIsoDate, type Ymd } from '../age/logic';
-  import { canChiDay, canChiMonth, canChiYear, lunarToSolar, solarToLunar, type LunarDate } from './logic';
+  import {
+    auspiciousHours,
+    canChiDay,
+    canChiHour,
+    canChiMonth,
+    canChiYear,
+    hourBranch,
+    lunarToSolar,
+    nextTet,
+    solarToLunar,
+    type LunarDate,
+  } from './logic';
   import type { LunarStrings } from './strings';
-
-  const LOCALE = { vi: 'vi-VN', en: 'en-US' } as const;
 
   for (const root of document.querySelectorAll<HTMLElement>('[data-lunar]')) {
     const { lang, s } = readConfig<{ lang: Lang; s: LunarStrings }>(root);
+    setupDateFields(root, lang);
     const set = (sel: string, text: string) => ($(root, sel).textContent = text);
     const solarIn = $<HTMLInputElement>(root, '[data-solar]');
-    const now = new Date();
-    solarIn.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-    $<HTMLInputElement>(root, '[data-lyear]').value = String(now.getFullYear());
+    const timeIn = $<HTMLInputElement>(root, '[data-time]');
+    const ticker = $(root, '[data-ticker]');
+    const now = localNow();
+    writeDate(solarIn, now.date, lang);
+    $<HTMLInputElement>(root, '[data-lyear]').value = String(now.date.y);
 
     const lunarText = (l: LunarDate) =>
       s.lunarFmt.replace('{d}', String(l.day)).replace('{m}', String(l.month)).replace('{leap}', l.leap ? ` ${s.leapLabel}`.replace('  ', ' ') : '').replace('{y}', String(l.year));
-    const solarText = (d: Ymd) =>
-      new Intl.DateTimeFormat(LOCALE[lang], { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(Date.UTC(d.y, d.m - 1, d.d));
-    const show = (solar: Ymd, lunar: LunarDate, main: string, sub: string) => {
+
+    const quipFor = (l: LunarDate, hourLine: string) => {
+      if (hourLine) return hourLine;
+      if (l.month === 1 && l.day <= 7 && !l.leap) return s.quipTet;
+      if (l.month === 8 && l.day === 15) return s.quipMidAutumn;
+      if (l.day === 1) return s.quipFirst;
+      if (l.day === 15) return s.quipFull;
+      if (l.month === 7) return s.quipGhost;
+      if (l.month === 12) return s.quipYearEnd;
+      return pick(s.quips, l.day + l.month);
+    };
+
+    const show = (solar: Ymd, lunar: LunarDate, main: string, sub: string, hour?: number) => {
       set('[data-error]', '');
       set('[data-value]', main);
       set('[data-sub]', sub);
       set('[data-cc-year]', canChiYear(lunar.year));
       set('[data-cc-month]', canChiMonth(lunar.month, lunar.year));
       set('[data-cc-day]', canChiDay(solar));
+      $(root, '[data-hour-stat]').hidden = hour === undefined;
+      const good = auspiciousHours(solar);
+      let hourLine = '';
+      if (hour !== undefined) {
+        const name = canChiHour(solar, hour);
+        set('[data-cc-hour]', name);
+        hourLine = fill(good.some((g) => g.branch === hourBranch(hour)) ? s.isGoodHour : s.notGoodHour, { name: name.split(' ')[1]! });
+      }
+      $(root, '[data-good-hours]').replaceChildren(
+        ...good.map((g) => {
+          const li = document.createElement('li');
+          li.className = hour !== undefined && g.branch === hourBranch(hour) ? 'pill pill-on' : 'pill';
+          li.textContent = `${g.name} (${g.range})`;
+          return li;
+        }),
+      );
+      setQuip(root, quipFor(lunar, hourLine));
     };
     const fail = (msg: string) => {
       for (const sel of ['[data-value]', '[data-cc-year]', '[data-cc-month]', '[data-cc-day]']) set(sel, '-');
       set('[data-sub]', '');
       set('[data-error]', msg);
+      $(root, '[data-hour-stat]').hidden = true;
+      $(root, '[data-good-hours]').replaceChildren();
+      setQuip(root, '');
     };
+
+    // Countdown to the next Tết from right now, independent of the inputs.
+    const tick = () => {
+      const current = localNow();
+      const tet = nextTet(current.date);
+      const seconds = (wallTime(tet) - wallTime(current.date, current.time)) / 1000;
+      renderTicker(ticker, seconds, fill(s.tetCountdown, { canChi: canChiYear(tet.y) }), fill(s.tetFoot, { date: formatDateWithWeekday(tet, lang) }), lang);
+    };
+    everySecond(tick)(true);
+    tick();
 
     const update = () => {
       const s2l = root.querySelector<HTMLInputElement>('[data-mode]:checked')!.value === 's2l';
       $(root, '[data-solar-fields]').hidden = !s2l;
       $(root, '[data-lunar-fields]').hidden = s2l;
       if (s2l) {
-        const solar = parseIsoDate(solarIn.value);
+        const solar = readDate(solarIn, lang);
         if (!solar || solar.y < 1901 || solar.y > 2099) return fail(s.errDate);
+        const time = parseTimeText(timeIn.value);
+        if (time === null) return fail(s.errTime);
         const lunar = solarToLunar(solar);
-        return show(solar, lunar, lunarText(lunar), solarText(solar));
+        return show(solar, lunar, lunarText(lunar), formatDateWithWeekday(solar, lang), time?.h);
       }
       const num = (sel: string) => Number($<HTMLInputElement>(root, sel).value.trim());
       const lunar = { day: num('[data-lday]'), month: num('[data-lmonth]'), year: num('[data-lyear]'), leap: $<HTMLInputElement>(root, '[data-leap]').checked };
       if (!(lunar.year >= 1901 && lunar.year <= 2099)) return fail(s.errDate);
       const solar = lunarToSolar(lunar);
       if (!solar) return fail(s.errLunar);
-      show(solar, lunar, solarText(solar), lunarText(lunar));
+      show(solar, lunar, formatDateWithWeekday(solar, lang), lunarText(lunar));
     };
     root.addEventListener('input', update);
     root.addEventListener('change', update);

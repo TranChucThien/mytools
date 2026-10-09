@@ -1,9 +1,6 @@
-export interface Ymd {
-  y: number;
-  /** 1–12 */
-  m: number;
-  d: number;
-}
+import { addDays, daysInMonth, type Hms, type Ymd } from '../../lib/date';
+
+export { parseIsoDate, type Ymd } from '../../lib/date';
 
 export interface Age {
   years: number;
@@ -18,21 +15,8 @@ export interface Age {
 
 const DAY = 86_400_000;
 
-function daysInMonth(y: number, m: number): number {
-  return new Date(Date.UTC(y, m, 0)).getUTCDate();
-}
-
 function toTime({ y, m, d }: Ymd): number {
   return Date.UTC(y, m - 1, d);
-}
-
-/** Parse the value of an <input type="date"> ("YYYY-MM-DD"). */
-export function parseIsoDate(s: string): Ymd | null {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s);
-  if (!match) return null;
-  const [y, m, d] = [Number(match[1]), Number(match[2]), Number(match[3])];
-  if (m < 1 || m > 12 || d < 1 || d > daysInMonth(y, m)) return null;
-  return { y, m, d };
 }
 
 /** Add whole months, clamping the day to the target month's length (31 Jan + 1 month = 28/29 Feb). */
@@ -67,5 +51,39 @@ export function ageBetween(birth: Ymd, ref: Ymd): Age | null {
     weekday: new Date(tBirth).getUTCDay(),
     nextBirthday: next,
     daysToBirthday: Math.round((toTime(next) - tRef) / DAY),
+  };
+}
+
+export interface Span {
+  years: number;
+  months: number;
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  totalSeconds: number;
+}
+
+const secondsOfDay = ({ h, mi, s }: Hms) => h * 3600 + mi * 60 + s;
+
+/** Calendar span between two wall-clock moments, down to the second; null if `end` is before `start`. */
+export function spanBetween(start: Ymd, startTime: Hms, end: Ymd, endTime: Hms): Span | null {
+  const totalMs = Date.UTC(end.y, end.m - 1, end.d, endTime.h, endTime.mi, endTime.s) - Date.UTC(start.y, start.m - 1, start.d, startTime.h, startTime.mi, startTime.s);
+  if (totalMs < 0) return null;
+  let clock = secondsOfDay(endTime) - secondsOfDay(startTime);
+  let endDate = end;
+  if (clock < 0) {
+    clock += 86_400;
+    endDate = addDays(end, -1);
+  }
+  const calendar = ageBetween(start, endDate)!;
+  return {
+    years: calendar.years,
+    months: calendar.months,
+    days: calendar.days,
+    hours: Math.floor(clock / 3600),
+    minutes: Math.floor(clock / 60) % 60,
+    seconds: clock % 60,
+    totalSeconds: totalMs / 1000,
   };
 }

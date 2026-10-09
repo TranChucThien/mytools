@@ -1,4 +1,8 @@
 ---
+import DateField from '../../components/DateField.astro';
+import Quip from '../../components/Quip.astro';
+import Ticker from '../../components/Ticker.astro';
+import TimeField from '../../components/TimeField.astro';
 import type { Lang, ToolMeta } from '../../lib/types';
 import { S } from './strings';
 
@@ -11,63 +15,106 @@ const s = S[lang];
 ---
 
 <section class="tool" data-datediff data-config={JSON.stringify({ lang, s })}>
-  <div class="grid">
-    <div class="field">
-      <label for="dd-start">{s.start}</label>
-      <input id="dd-start" type="date" data-start />
-    </div>
-    <div class="field">
-      <label for="dd-end">{s.end}</label>
-      <input id="dd-end" type="date" data-end />
-    </div>
+  <div class="dt-row">
+    <DateField id="dd-start" label={s.start} lang={lang} name="start" />
+    <TimeField id="dd-start-time" label={s.startTime} lang={lang} name="start-time" />
+  </div>
+  <div class="dt-row">
+    <DateField id="dd-end" label={s.end} lang={lang} name="end" />
+    <TimeField id="dd-end-time" label={s.endTime} lang={lang} name="end-time" />
   </div>
   <label class="check"><input type="checkbox" data-include /> {s.includeEnd}</label>
+  <p class="hint" data-include-off hidden>{s.includeEndOff}</p>
   <div class="result" aria-live="polite">
     <span class="result-value result-big" data-value></span>
-    <span class="result-formula">{s.days}</span>
+    <span class="result-formula" data-value-label>{s.days}</span>
   </div>
   <p class="error" data-error></p>
+  <Ticker lang={lang} icon="hourglass" />
   <dl class="stats">
     <div><dt>{s.weeks}</dt><dd data-weeks>-</dd></div>
     <div><dt>{s.months}</dt><dd data-months>-</dd></div>
     <div><dt>{s.weekdays}</dt><dd data-weekdays>-</dd></div>
+    <div><dt>{s.totalHours}</dt><dd data-hours>-</dd></div>
   </dl>
+  <Quip icon="calendar-smile" />
 </section>
 
 <script>
-  import { $, readConfig } from '../../lib/client';
+  import { $, readConfig, setQuip } from '../../lib/client';
+  import { formatDate, formatTime, localNow, parseTimeText, wallTime, type Hms } from '../../lib/date';
+  import { everySecond, readDate, renderTicker, setupDateFields, writeDate } from '../../lib/date-client';
   import { formatNumber } from '../../lib/number';
+  import { band, fill } from '../../lib/quip';
   import type { Lang } from '../../lib/types';
-  import { parseIsoDate } from '../age/logic';
+  import { spanBetween } from '../age/logic';
   import { dateDifference } from './logic';
   import type { DateDiffStrings } from './strings';
 
-  const iso = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const MIDNIGHT: Hms = { h: 0, mi: 0, s: 0 };
 
   for (const root of document.querySelectorAll<HTMLElement>('[data-datediff]')) {
     const { lang, s } = readConfig<{ lang: Lang; s: DateDiffStrings }>(root);
-    const startIn = $<HTMLInputElement>(root, '[data-start]');
-    const endIn = $<HTMLInputElement>(root, '[data-end]');
-    const today = new Date();
-    startIn.value = iso(today);
-    endIn.value = `${today.getFullYear()}-12-31`;
-    const u = (n: number, one: string, many: string) => `${formatNumber(n, lang)} ${n === 1 ? one : many}`;
+    setupDateFields(root, lang);
+    const input = (sel: string) => $<HTMLInputElement>(root, sel);
     const set = (sel: string, text: string) => ($(root, sel).textContent = text);
+    const u = (n: number, one: string, many: string) => `${formatNumber(n, lang)} ${n === 1 ? one : many}`;
+    const ticker = $(root, '[data-ticker]');
+    const today = localNow().date;
+    writeDate(input('[data-start]'), today, lang);
+    writeDate(input('[data-end]'), { y: today.y, m: 12, d: 31 }, lang);
+
+    const fail = (msg: string) => {
+      for (const sel of ['[data-value]', '[data-weeks]', '[data-months]', '[data-weekdays]', '[data-hours]']) set(sel, '-');
+      set('[data-error]', msg);
+      renderTicker(ticker, null);
+      setQuip(root, '');
+      live(false);
+    };
+
     const update = () => {
-      const a = parseIsoDate(startIn.value);
-      const b = parseIsoDate(endIn.value);
-      if (!a || !b) {
-        for (const sel of ['[data-value]', '[data-weeks]', '[data-months]', '[data-weekdays]']) set(sel, '-');
-        set('[data-error]', s.errDate);
-        return;
-      }
-      const r = dateDifference(a, b, $<HTMLInputElement>(root, '[data-include]').checked);
+      const a = readDate(input('[data-start]'), lang);
+      const b = readDate(input('[data-end]'), lang);
+      const ta = parseTimeText(input('[data-start-time]').value);
+      const tb = parseTimeText(input('[data-end-time]').value);
+      if (!a || !b) return fail(s.errDate);
+      if (ta === null || tb === null) return fail(s.errTime);
+      const timed = ta !== undefined || tb !== undefined;
+      const include = input('[data-include]');
+      include.disabled = timed;
+      $(root, '[data-include-off]').hidden = !timed;
+
+      const r = dateDifference(a, b, include.checked && !timed);
       set('[data-error]', '');
-      set('[data-value]', u(r.days, s.unitDay, s.unitDays));
       set('[data-weeks]', `${u(r.weeks, s.unitWeek, s.unitWeeks)} ${u(r.extraDays, s.unitDay, s.unitDays)}`);
       set('[data-months]', `${u(r.months, s.unitMonth, s.unitMonths)} ${u(r.monthDays, s.unitDay, s.unitDays)}`);
       set('[data-weekdays]', u(r.weekdays, s.unitDay, s.unitDays));
+
+      const startMs = wallTime(a, ta ?? MIDNIGHT);
+      const endMs = wallTime(b, tb ?? MIDNIGHT);
+      const seconds = Math.abs(endMs - startMs) / 1000;
+      set('[data-hours]', formatNumber(Math.floor(seconds / 3600), lang));
+      if (timed) {
+        const [from, to] = startMs <= endMs ? [[a, ta ?? MIDNIGHT], [b, tb ?? MIDNIGHT]] as const : [[b, tb ?? MIDNIGHT], [a, ta ?? MIDNIGHT]] as const;
+        const span = spanBetween(from[0], from[1], to[0], to[1])!;
+        const days = Math.floor(seconds / 86_400);
+        set('[data-value]', `${u(days, s.unitDay, s.unitDays)} ${span.hours} ${s.unitHour} ${span.minutes} ${s.unitMinute}`);
+        set('[data-value-label]', s.exact);
+      } else {
+        set('[data-value]', u(r.days, s.unitDay, s.unitDays));
+        set('[data-value-label]', s.days);
+      }
+
+      // Live counter towards (or since) the end moment.
+      const now = localNow();
+      const nowMs = wallTime(now.date, now.time);
+      const when = tb ? `${formatTime(tb)} ${formatDate(b, lang)}` : formatDate(b, lang);
+      const diff = (endMs - nowMs) / 1000;
+      renderTicker(ticker, Math.abs(diff), fill(diff >= 0 ? s.countdown : s.elapsed, { when }), '', lang);
+      setQuip(root, band(r.days, s.quips));
+      live(true);
     };
+    const live = everySecond(update);
     root.addEventListener('input', update);
     root.addEventListener('change', update);
     update();

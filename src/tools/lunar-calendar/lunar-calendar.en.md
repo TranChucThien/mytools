@@ -12,6 +12,8 @@ faq:
     a: "Results are accurate from roughly 1900 to 2100. The tool uses Ho Ngoc Duc's well known astronomical algorithm, which calculates new moons and solar terms to find the first day of each month and any leap month."
   - q: "Is this lunar calendar converter free?"
     a: "Yes, it is completely free with no signup. All calculations run in your browser."
+  - q: "How do I see the auspicious hours and the Can Chi of an hour?"
+    a: "The tool always lists the six auspicious (hoàng đạo) hours of the day. Add a time (optional) to see the Can Chi of that hour and whether it is auspicious. On February 17, 2026 (a Nhâm Tuất day) the auspicious hours are Dần, Thìn, Tỵ, Thân, Dậu and Hợi, and 09:00 is the Ất Tỵ hour. The Tý hour starts at 23:00, so 23:30 already counts as the Nhâm Tý hour of the next day."
 ---
 
 ## How to convert between solar and lunar dates

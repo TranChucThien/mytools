@@ -1,4 +1,5 @@
 ---
+import Quip from '../../components/Quip.astro';
 import type { Lang, ToolMeta } from '../../lib/types';
 import { S } from './strings';
 
@@ -35,6 +36,7 @@ const s = S[lang];
   </div>
   <p class="empty" style="margin-top:16px" data-empty>{s.empty}</p>
   <ul class="img-list" data-list></ul>
+  <Quip icon="photo-down" />
 </section>
 
 <style>
@@ -85,8 +87,9 @@ const s = S[lang];
 </style>
 
 <script>
-  import { $, debounce, readConfig } from '../../lib/client';
+  import { $, debounce, readConfig, setQuip } from '../../lib/client';
   import { formatNumber, parseNumber } from '../../lib/number';
+  import { band } from '../../lib/quip';
   import type { Lang } from '../../lib/types';
   import { fitSize, outputName, savedPercent, type ImageFormat } from './logic';
   import type { ImageStrings } from './strings';
@@ -127,6 +130,8 @@ const s = S[lang];
       const quality = Number($<HTMLInputElement>(root, '[data-quality]').value);
       $(root, '[data-q-label]').textContent = String(quality);
       const maxWidth = parseNumber($<HTMLInputElement>(root, '[data-width]').value, lang) ?? undefined;
+      let totalBefore = 0;
+      let totalAfter = 0;
       const items = await Promise.all(
         files.map(async (file) => {
           const li = document.createElement('li');
@@ -135,6 +140,8 @@ const s = S[lang];
             const url = URL.createObjectURL(blob);
             urls.push(url);
             const pct = savedPercent(file.size, blob.size);
+            totalBefore += file.size;
+            totalAfter += blob.size;
             const note = pct >= 0 ? `${pct}% ${s.saved}` : `${-pct}% ${s.larger}`;
             li.innerHTML = `<img alt="" /><div class="meta"><strong></strong><span></span></div><a class="btn btn-sm" download></a>`;
             li.querySelector('img')!.src = url;
@@ -153,6 +160,8 @@ const s = S[lang];
         }),
       );
       list.replaceChildren(...items);
+      const total = totalBefore > 0 ? savedPercent(totalBefore, totalAfter) : null;
+      setQuip(root, total === null ? '' : total < 0 ? s.quipLarger : band(total, s.quips));
     };
 
     filesIn.addEventListener('change', run);

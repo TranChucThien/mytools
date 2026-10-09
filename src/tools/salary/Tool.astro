@@ -1,4 +1,5 @@
 ---
+import Quip from '../../components/Quip.astro';
 import type { Lang, ToolMeta } from '../../lib/types';
 import { S } from './strings';
 
@@ -51,18 +52,24 @@ const s = S[lang];
     <div><dt>{s.taxable}</dt><dd data-taxable>-</dd></div>
     <div><dt>{s.tax}</dt><dd data-tax>-</dd></div>
   </dl>
+  <Quip icon="building-bank" />
+  <p class="hint" data-taxable-formula></p>
   <div class="prose" style="max-width:none">
     <table>
-      <thead><tr><th scope="col">{s.bracket}</th><th scope="col">%</th><th scope="col">{s.tax}</th></tr></thead>
+      <thead>
+        <tr><th scope="col">{s.bracket}</th><th scope="col">{s.rate}</th><th scope="col">{s.portion}</th><th scope="col">{s.tax}</th></tr>
+      </thead>
       <tbody data-brackets></tbody>
     </table>
   </div>
+  <p class="hint">{s.bracketNote}</p>
   <p class="hint">{s.asOf}</p>
 </section>
 
 <script>
-  import { $, readConfig } from '../../lib/client';
+  import { $, readConfig, setQuip } from '../../lib/client';
   import { formatNumber, parseNumber } from '../../lib/number';
+  import { band, fill } from '../../lib/quip';
   import type { Lang } from '../../lib/types';
   import { grossToNet, netToGross } from './logic';
   import type { Region } from './rules';
@@ -88,6 +95,8 @@ const s = S[lang];
       if (!ok) {
         for (const sel of ['[data-value]', '[data-bhxh]', '[data-bhyt]', '[data-bhtn]', '[data-deductions]', '[data-taxable]', '[data-tax]']) set(sel, '-');
         set('[data-error]', s.errInput);
+        set('[data-taxable-formula]', '');
+        setQuip(root, '');
         tbody.replaceChildren();
         return;
       }
@@ -101,14 +110,21 @@ const s = S[lang];
       set('[data-deductions]', f(r.deductions));
       set('[data-taxable]', f(r.taxable));
       set('[data-tax]', f(r.tax));
+      set('[data-taxable-formula]', fill(s.taxableFormula, { gross: f(r.gross), ins: f(r.insurance), ded: f(r.deductions), taxable: f(r.taxable) }));
+      setQuip(root, band(r.gross > 0 ? r.tax / r.gross : 0, s.quips));
       tbody.replaceChildren(
         ...r.byBracket.map((b) => {
           const tr = document.createElement('tr');
+          if (b.portion === 0) tr.className = 'row-muted';
           const range = b.to === Infinity ? `> ${f(b.from)}` : `${f(b.from)} - ${f(b.to)}`;
-          for (const v of [range, `${formatNumber(b.rate * 100, lang)}%`, f(b.tax)]) tr.append(Object.assign(document.createElement('td'), { textContent: v }));
+          const rate = `${formatNumber(b.rate * 100, lang)}%`;
+          for (const v of [range, rate, f(b.portion), f(b.tax)]) tr.append(Object.assign(document.createElement('td'), { textContent: v }));
           return tr;
         }),
+        Object.assign(document.createElement('tr'), { className: 'row-total' }),
       );
+      const total = tbody.lastElementChild!;
+      for (const v of [s.total, '', f(r.taxable), f(r.tax)]) total.append(Object.assign(document.createElement('td'), { textContent: v }));
     };
     root.addEventListener('input', update);
     root.addEventListener('change', update);

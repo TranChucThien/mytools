@@ -1,4 +1,5 @@
 ---
+import Quip from '../../components/Quip.astro';
 import { t } from '../../i18n';
 import type { Lang, ToolMeta } from '../../lib/types';
 import { S } from './strings';
@@ -11,7 +12,7 @@ const { lang } = Astro.props;
 const s = S[lang];
 ---
 
-<section class="tool" data-slug data-copied={t(lang).copied}>
+<section class="tool" data-slug data-copied={t(lang).copied} data-config={JSON.stringify({ s })}>
   <div class="field">
     <label for="sl-in">{s.input}</label>
     <input id="sl-in" type="text" value={s.example} data-in />
@@ -27,18 +28,24 @@ const s = S[lang];
     <span class="result-value mono-big" data-out></span>
     <button type="button" class="btn btn-secondary btn-sm" data-copy>{t(lang).copy}</button>
   </div>
+  <Quip icon="link" />
 </section>
 
 <script>
-  import { $, setupCopy } from '../../lib/client';
+  import { $, readConfig, setQuip, setupCopy } from '../../lib/client';
+  import { band } from '../../lib/quip';
   import { slugify } from '../../lib/text';
+  import type { SlugStrings } from './strings';
 
   for (const root of document.querySelectorAll<HTMLElement>('[data-slug]')) {
     const input = $<HTMLInputElement>(root, '[data-in]');
     const out = $(root, '[data-out]');
+    const { s } = readConfig<{ s: SlugStrings }>(root);
     const update = () => {
       const sep = (root.querySelector<HTMLInputElement>('[data-sep]:checked')?.value ?? '-') as '-' | '_';
-      out.textContent = slugify(input.value, sep) || '-';
+      const slug = slugify(input.value, sep);
+      out.textContent = slug || '-';
+      setQuip(root, slug ? band(slug.length, s.quips) : '');
     };
     root.addEventListener('input', update);
     root.addEventListener('change', update);

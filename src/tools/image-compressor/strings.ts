@@ -10,8 +10,16 @@ export const S = {
     after: 'Sau nén',
     saved: 'giảm',
     larger: 'lớn hơn bản gốc, hãy giảm chất lượng hoặc đổi định dạng',
-    errRead: 'Không đọc được ảnh này. Hãy dùng JPG, PNG hoặc WebP.',
-    empty: 'Chưa có ảnh nào. Chọn một hoặc nhiều ảnh để bắt đầu.',
+    errRead: 'Ảnh này làm khó mình rồi, không đọc được. Hãy dùng JPG, PNG hoặc WebP.',
+    empty: 'Chưa có ảnh nào, máy nén đang ngồi chơi. Chọn một hoặc nhiều ảnh để bắt đầu.',
+    quipLarger: 'Ảnh nén xong lại béo hơn bản gốc, như đi ăn buffet về. Giảm chất lượng hoặc đổi định dạng thử nhé.',
+    quips: [
+      [10, 'Giảm được chút xíu. Ảnh gốc vốn đã gọn gàng sẵn rồi.'],
+      [40, 'Nhẹ hơn kha khá, gửi Zalo nhanh hơn hẳn.'],
+      [70, 'Giảm hơn nửa dung lượng mà nhìn vẫn ổn. Bộ nhớ điện thoại xin cảm ơn.'],
+      [90, 'Ảnh giảm cân thần tốc, nhẹ như lông hồng. Nhớ xem lại độ nét nhé.'],
+      [Infinity, 'Nén tới mức gần như bay mất. Kiểm tra ảnh kỹ trước khi dùng nhé.'],
+    ] as [number, string][],
   },
   en: {
     choose: 'Choose images',
@@ -24,8 +32,16 @@ export const S = {
     after: 'Compressed',
     saved: 'smaller',
     larger: 'larger than the original, try lower quality or another format',
-    errRead: 'Could not read this image. Please use JPG, PNG or WebP.',
-    empty: 'No images yet. Choose one or more images to start.',
+    errRead: 'This image got the better of us and could not be read. Please use JPG, PNG or WebP.',
+    empty: 'No images yet, the compressor is twiddling its thumbs. Choose one or more images to start.',
+    quipLarger: 'The result came out bigger than the original, like after an all-you-can-eat buffet. Try lower quality or another format.',
+    quips: [
+      [10, 'Shaved off a little. The original was already pretty lean.'],
+      [40, 'Noticeably lighter. Uploads and chat apps will move faster.'],
+      [70, 'More than half the size gone and it still looks good. Your phone storage says thanks.'],
+      [90, 'Light as a feather. Give the sharpness a quick check.'],
+      [Infinity, 'Squeezed almost to nothing. Look closely before you use it.'],
+    ] as [number, string][],
   },
 };
 export type ImageStrings = (typeof S)['vi'];

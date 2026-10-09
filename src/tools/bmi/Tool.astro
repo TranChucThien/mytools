@@ -1,4 +1,5 @@
 ---
+import Quip from '../../components/Quip.astro';
 import { t } from '../../i18n';
 import type { Lang, ToolMeta } from '../../lib/types';
 import { S } from './strings';
@@ -38,11 +39,13 @@ const config = { lang, s, invalid: t(lang).errInvalidNumber };
   <dl class="stats">
     <div><dt>{s.range}</dt><dd data-range>-</dd></div>
   </dl>
+  <Quip icon="heart-handshake" />
 </section>
 
 <script>
-  import { $, readConfig, setError } from '../../lib/client';
+  import { $, readConfig, setError, setQuip } from '../../lib/client';
   import { formatNumber, parseNumber } from '../../lib/number';
+  import { pick } from '../../lib/quip';
   import type { Lang } from '../../lib/types';
   import { bmi, classify, healthyRange, type BmiStandard } from './logic';
   import type { BmiStrings } from './strings';
@@ -65,11 +68,14 @@ const config = { lang, s, invalid: t(lang).errInvalidNumber };
         set('[data-class]', '');
         set('[data-range]', '-');
         set('[data-error]', w === null || h === null ? (wIn.value.trim() && hIn.value.trim() ? invalid : '') : s.errInput);
+        setQuip(root, '');
         return;
       }
       set('[data-error]', '');
       set('[data-value]', formatNumber(v, lang, 1));
-      set('[data-class]', s.classes[classify(v, std)]);
+      const cls = classify(v, std);
+      set('[data-class]', s.classes[cls]);
+      setQuip(root, pick(s.quips[cls], Math.round(v * 10)));
       const [lo, hi] = healthyRange(h!, std);
       set('[data-range]', `${formatNumber(lo, lang, 1)} - ${formatNumber(hi, lang, 1)} kg`);
     };

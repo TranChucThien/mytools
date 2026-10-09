@@ -1,0 +1,11 @@
+---
+/** A light-hearted one-liner under a tool's result. Set its text from the client with `setQuip()`. */
+import Icon from './Icon.astro';
+
+interface Props {
+  icon?: string;
+}
+const { icon = 'mood-wink' } = Astro.props;
+---
+
+<p class="quip" data-quip hidden><Icon name={icon} /> <span data-quip-text></span></p>

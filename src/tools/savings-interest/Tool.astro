@@ -1,5 +1,6 @@
 ---
 import { t } from '../../i18n';
+import Quip from '../../components/Quip.astro';
 import type { Lang, ToolMeta } from '../../lib/types';
 import { S } from './strings';
 
@@ -11,7 +12,7 @@ const { lang } = Astro.props;
 const s = S[lang];
 ---
 
-<section class="tool" data-savings data-config={JSON.stringify({ lang, s, invalid: t(lang).errInvalidNumber, copied: t(lang).copied })}>
+<section class="tool" data-savings data-config={JSON.stringify({ lang, s, copied: t(lang).copied })}>
   <div class="grid">
     <div class="field">
       <label for="sv-amount">{s.amount}</label>
@@ -42,17 +43,19 @@ const s = S[lang];
   <dl class="stats">
     <div><dt>{s.total}</dt><dd data-total>-</dd></div>
   </dl>
+  <Quip icon="pig-money" />
 </section>
 
 <script>
-  import { $, readConfig, setupCopy } from '../../lib/client';
+  import { $, readConfig, setQuip, setupCopy } from '../../lib/client';
+  import { band, fill } from '../../lib/quip';
   import { formatNumber, parseNumber } from '../../lib/number';
   import type { Lang } from '../../lib/types';
   import { savings, type SavingsMethod } from './logic';
   import type { SavingsStrings } from './strings';
 
   for (const root of document.querySelectorAll<HTMLElement>('[data-savings]')) {
-    const { lang, s, invalid, copied } = readConfig<{ lang: Lang; s: SavingsStrings; invalid: string; copied: string }>(root);
+    const { lang, s, copied } = readConfig<{ lang: Lang; s: SavingsStrings; copied: string }>(root);
     const num = (sel: string) => parseNumber($<HTMLInputElement>(root, sel).value, lang);
     const set = (sel: string, text: string) => ($(root, sel).textContent = text);
     const update = () => {
@@ -62,12 +65,21 @@ const s = S[lang];
       if (!r) {
         set('[data-value]', '-');
         set('[data-total]', '-');
-        set('[data-error]', amount === null || rate === null || term === null ? invalid : s.errTerm);
+        set('[data-error]', amount === null || rate === null || term === null ? s.errInvalid : s.errTerm);
+        setQuip(root, '');
         return;
       }
       set('[data-error]', '');
       set('[data-value]', formatNumber(r.interest, lang, 2));
       set('[data-total]', formatNumber(r.total, lang, 2));
+      // Cups = interest / s.cupPrice (35.000 đ per bubble tea in VI, 5 per coffee in EN); the line states the price.
+      const cups = Math.floor(r.interest / s.cupPrice);
+      let quip: string;
+      if (amount === 0) quip = s.quipNoMoney;
+      else if (rate === 0) quip = s.quipZeroRate;
+      else if (cups < 1) quip = s.quipCrumbs;
+      else quip = fill(band(r.interest / amount!, s.quips), { cups: formatNumber(cups, lang) });
+      setQuip(root, quip);
     };
     root.addEventListener('input', update);
     root.addEventListener('change', update);

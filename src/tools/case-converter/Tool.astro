@@ -1,4 +1,5 @@
 ---
+import Quip from '../../components/Quip.astro';
 import { t } from '../../i18n';
 import type { Lang, ToolMeta } from '../../lib/types';
 import { S } from './strings';
@@ -11,7 +12,7 @@ const { lang } = Astro.props;
 const s = S[lang];
 ---
 
-<section class="tool" data-case data-copied={t(lang).copied}>
+<section class="tool" data-case data-copied={t(lang).copied} data-config={JSON.stringify({ s })}>
   <div class="field">
     <label for="cc-in">{s.input}</label>
     <textarea id="cc-in" rows="5" data-in>{s.example}</textarea>
@@ -29,21 +30,27 @@ const s = S[lang];
     <label for="cc-out">{s.output}</label>
     <textarea id="cc-out" rows="5" class="output" readonly data-out></textarea>
   </div>
+  <Quip icon="letter-case" />
   <div class="actions">
     <button type="button" class="btn btn-secondary" data-copy>{t(lang).copy}</button>
   </div>
 </section>
 
 <script>
-  import { $, setupCopy } from '../../lib/client';
+  import { $, readConfig, setQuip, setupCopy } from '../../lib/client';
   import { convertCase, type CaseMode } from './logic';
+  import type { CaseStrings } from './strings';
 
   for (const root of document.querySelectorAll<HTMLElement>('[data-case]')) {
     const input = $<HTMLTextAreaElement>(root, '[data-in]');
     const output = $<HTMLTextAreaElement>(root, '[data-out]');
     const buttons = [...root.querySelectorAll<HTMLButtonElement>('[data-mode]')];
     let mode: CaseMode = 'upper';
-    const update = () => (output.value = convertCase(input.value, mode));
+    const { s } = readConfig<{ s: CaseStrings }>(root);
+    const update = () => {
+      output.value = convertCase(input.value, mode);
+      setQuip(root, input.value.trim() === '' ? '' : s.quips[mode]);
+    };
     for (const b of buttons) {
       b.addEventListener('click', () => {
         mode = b.dataset.mode as CaseMode;

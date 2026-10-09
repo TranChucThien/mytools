@@ -1,5 +1,5 @@
 ---
-import { t } from '../../i18n';
+import Quip from '../../components/Quip.astro';
 import type { Lang, ToolMeta } from '../../lib/types';
 import { S } from './strings';
 
@@ -11,7 +11,7 @@ const { lang } = Astro.props;
 const s = S[lang];
 ---
 
-<section class="tool" data-loan data-config={JSON.stringify({ lang, s, invalid: t(lang).errInvalidNumber })}>
+<section class="tool" data-loan data-config={JSON.stringify({ lang, s })}>
   <div class="grid">
     <div class="field">
       <label for="ln-amount">{s.amount}</label>
@@ -43,6 +43,7 @@ const s = S[lang];
     <div><dt>{s.totalInterest}</dt><dd data-interest>-</dd></div>
     <div><dt>{s.totalPayment}</dt><dd data-total>-</dd></div>
   </dl>
+  <Quip icon="receipt" />
   <details class="schedule" style="margin-top:16px">
     <summary class="btn btn-secondary btn-sm">{s.schedule}</summary>
     <div class="prose" style="max-width:none">
@@ -55,14 +56,15 @@ const s = S[lang];
 </section>
 
 <script>
-  import { $, readConfig } from '../../lib/client';
+  import { $, readConfig, setQuip } from '../../lib/client';
+  import { band, fill } from '../../lib/quip';
   import { formatNumber, parseNumber } from '../../lib/number';
   import type { Lang } from '../../lib/types';
   import { loanSchedule, type LoanMethod } from './logic';
   import type { LoanStrings } from './strings';
 
   for (const root of document.querySelectorAll<HTMLElement>('[data-loan]')) {
-    const { lang, s, invalid } = readConfig<{ lang: Lang; s: LoanStrings; invalid: string }>(root);
+    const { lang, s } = readConfig<{ lang: Lang; s: LoanStrings }>(root);
     const num = (sel: string) => parseNumber($<HTMLInputElement>(root, sel).value, lang);
     const set = (sel: string, text: string) => ($(root, sel).textContent = text);
     const f = (n: number) => formatNumber(n, lang, 0);
@@ -73,14 +75,18 @@ const s = S[lang];
       const tbody = $(root, '[data-rows]');
       if (!r) {
         for (const sel of ['[data-value]', '[data-interest]', '[data-total]']) set(sel, '-');
-        set('[data-error]', amount === null || rate === null || term === null ? invalid : s.errTerm);
+        set('[data-error]', amount === null || rate === null || term === null ? s.errInvalid : s.errTerm);
         tbody.replaceChildren();
+        setQuip(root, '');
         return;
       }
       set('[data-error]', '');
       set('[data-value]', f(r.rows[0]!.payment));
       set('[data-interest]', f(r.totalInterest));
       set('[data-total]', f(r.totalPayment));
+      // Bands by total interest / principal (amount > 0 is guaranteed by loanSchedule).
+      const ratio = r.totalInterest / amount!;
+      setQuip(root, r.totalInterest <= 0 ? s.quipFree : fill(band(ratio, s.quips), { pct: ratio * 100 < 0.1 ? (lang === 'vi' ? 'dưới 0,1' : 'under 0.1') : formatNumber(ratio * 100, lang, 1) }));
       tbody.replaceChildren(
         ...r.rows.map((row) => {
           const tr = document.createElement('tr');

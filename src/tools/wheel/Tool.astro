@@ -1,4 +1,5 @@
 ---
+import Quip from '../../components/Quip.astro';
 import type { Lang, ToolMeta } from '../../lib/types';
 import { S } from './strings';
 
@@ -19,6 +20,7 @@ const s = S[lang];
     <span class="result-formula" style="width:auto">{s.result}</span>
     <span class="result-value" data-value></span>
   </div>
+  <Quip icon="confetti" />
   <p class="error" data-error></p>
   <div class="actions" style="justify-content:center">
     <button type="button" class="btn" data-spin>{s.spin}</button>
@@ -63,7 +65,8 @@ const s = S[lang];
 </style>
 
 <script>
-  import { $, readConfig } from '../../lib/client';
+  import { $, readConfig, setQuip } from '../../lib/client';
+  import { fill } from '../../lib/quip';
   import { parseNames } from '../name-picker/logic';
   import { secureRandomBelow } from '../random-number/logic';
   import { spinTarget } from './logic';
@@ -120,6 +123,7 @@ const s = S[lang];
       const items = parseNames(list.value);
       if (items.length < 2) {
         $(root, '[data-error]').textContent = s.errFew;
+        setQuip(root, '');
         return;
       }
       $(root, '[data-error]').textContent = '';
@@ -129,6 +133,7 @@ const s = S[lang];
       spinning = true;
       spinBtn.disabled = true;
       $(root, '[data-result]').hidden = true;
+      setQuip(root, '');
       canvas.style.transform = `rotate(${rotation}deg)`;
       const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
       setTimeout(
@@ -137,6 +142,8 @@ const s = S[lang];
           spinBtn.disabled = false;
           $(root, '[data-value]').textContent = items[winner]!;
           $(root, '[data-result]').hidden = false;
+          // Quip choice is not security-sensitive, so Math.random is fine here.
+          setQuip(root, fill(s.quips[Math.floor(Math.random() * s.quips.length)]!, { item: items[winner]! }));
           if ($<HTMLInputElement>(root, '[data-remove]').checked) {
             items.splice(winner, 1);
             list.value = items.join('\n');

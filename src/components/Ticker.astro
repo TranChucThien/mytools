@@ -1,0 +1,24 @@
+---
+/** Live day/hour/minute/second counter. Filled from the client with `renderTicker()`. */
+import { t } from '../i18n';
+import type { Lang } from '../lib/types';
+import Icon from './Icon.astro';
+
+interface Props {
+  lang: Lang;
+  icon?: string;
+}
+const { lang, icon = 'hourglass' } = Astro.props;
+const u = t(lang).tickerUnits;
+---
+
+<div class="ticker" data-ticker hidden>
+  <p class="ticker-head"><Icon name={icon} /> <span data-ticker-label></span></p>
+  <div class="ticker-cells">
+    <div><span data-tick="days">0</span><small>{u.days}</small></div>
+    <div><span data-tick="hours">00</span><small>{u.hours}</small></div>
+    <div><span data-tick="minutes">00</span><small>{u.minutes}</small></div>
+    <div><span data-tick="seconds">00</span><small>{u.seconds}</small></div>
+  </div>
+  <p class="ticker-foot" data-ticker-foot></p>
+</div>

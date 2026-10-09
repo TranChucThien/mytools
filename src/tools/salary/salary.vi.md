@@ -87,7 +87,7 @@ faq:
 
 Kết quả là số ước tính cho cá nhân cư trú có hợp đồng lao động từ 3 tháng trở lên. Công cụ chưa tính các khoản phụ cấp được miễn thuế (như tiền ăn giữa ca trong giới hạn cho phép), thuế suất toàn phần 20% với cá nhân không cư trú và mức khấu trừ 10% với hợp đồng dưới 3 tháng.
 
-Mức trần BHXH, BHYT dùng trong công cụ là 50.600.000đ theo lương cơ sở 2.530.000đ áp dụng từ 01/7/2026. Từ 01/01 đến 30/6/2026, mức trần này là 46.800.000đ, nên bảng lương các tháng đầu năm 2026 có thể khác một chút với người lương cao.
+Mức trần BHXH, BHYT dùng trong công cụ là 50.600.000đ theo lương cơ sở 2.530.000đ áp dụng từ 01/07/2026. Từ 01/01 đến 30/06/2026, mức trần này là 46.800.000đ, nên bảng lương các tháng đầu năm 2026 có thể khác một chút với người lương cao.
 
 > Lưu ý: quy định về bảo hiểm và thuế có thể thay đổi. Trang này phản ánh quy định tại thời điểm tháng 10/2026. Hãy đối chiếu với phòng nhân sự hoặc người tư vấn thuế trước khi ra quyết định.
 

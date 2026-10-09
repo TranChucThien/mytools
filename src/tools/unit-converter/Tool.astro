@@ -1,4 +1,5 @@
 ---
+import Quip from '../../components/Quip.astro';
 import { t } from '../../i18n';
 import { formatNumber } from '../../lib/number';
 import { getTool, toolPath } from '../../lib/registry';
@@ -31,6 +32,7 @@ const config = {
   bSym,
   invalid: s.errInvalidNumber,
   copied: s.copied,
+  quips: { zero: s.convQuipZero, negative: s.convQuipNegative, bands: s.convQuips },
 };
 ---
 
@@ -51,6 +53,7 @@ const config = {
     <span class="result-formula">{s.formula}: {formulaText(pair, direction, lang)}</span>
   </div>
   <p class="error" data-error></p>
+  <Quip icon="arrows-exchange" />
   <div class="actions">
     <a class="btn btn-secondary" href={toolPath(reverse, lang)}>{s.convSwap}: {reverse.name[lang]}</a>
   </div>
@@ -82,8 +85,9 @@ const config = {
 </section>
 
 <script>
-  import { $, readConfig, setError, setupCopy } from '../../lib/client';
+  import { $, readConfig, setError, setQuip, setupCopy } from '../../lib/client';
   import { formatNumber, parseNumber } from '../../lib/number';
+  import { band, fill } from '../../lib/quip';
   import type { Lang } from '../../lib/types';
   import { convert, type Direction } from './logic';
 
@@ -96,10 +100,11 @@ const config = {
     bSym: string;
     invalid: string;
     copied: string;
+    quips: { zero: string; negative: string; bands: [number, string][] };
   }
 
   for (const root of document.querySelectorAll<HTMLElement>('[data-conv]')) {
-    const { lang, factor, offset, direction, aSym, bSym, invalid, copied } = readConfig<Config>(root);
+    const { lang, factor, offset, direction, aSym, bSym, invalid, copied, quips } = readConfig<Config>(root);
     const pair = { factor, offset };
     const back: Direction = direction === 'forward' ? 'reverse' : 'forward';
     const aIn = $<HTMLInputElement>(root, '[data-a]');
@@ -119,12 +124,15 @@ const config = {
       if (v === null) {
         dst.value = '';
         valueEl.textContent = '-';
+        setQuip(root, '');
         return;
       }
       const out = convert(v, pair, source === 'a' ? direction : back);
       dst.value = formatNumber(out, lang);
       const [av, bv] = source === 'a' ? [v, out] : [out, v];
       valueEl.textContent = `${formatNumber(av, lang)} ${aSym} = ${formatNumber(bv, lang)} ${bSym}`;
+      const quip = bv === 0 ? quips.zero : bv < 0 ? quips.negative : band(bv, quips.bands);
+      setQuip(root, fill(quip, { a: aSym, b: bSym }));
     };
 
     aIn.addEventListener('input', () => sync('a'));

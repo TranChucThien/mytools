@@ -10,8 +10,8 @@ describe('progressiveTax', () => {
   });
   it('reports tax per bracket', () => {
     expect(progressiveTax(11_350_000).byBracket.filter((b) => b.tax > 0)).toEqual([
-      { from: 0, to: 10_000_000, rate: 0.05, tax: 500_000 },
-      { from: 10_000_000, to: 30_000_000, rate: 0.1, tax: 135_000 },
+      { from: 0, to: 10_000_000, rate: 0.05, portion: 10_000_000, tax: 500_000 },
+      { from: 10_000_000, to: 30_000_000, rate: 0.1, portion: 1_350_000, tax: 135_000 },
     ]);
   });
 });

@@ -1,4 +1,5 @@
 ---
+import Quip from '../../components/Quip.astro';
 import { t } from '../../i18n';
 import type { Lang, ToolMeta } from '../../lib/types';
 import { S } from './strings';
@@ -11,7 +12,7 @@ const { lang } = Astro.props;
 const s = S[lang];
 ---
 
-<section class="tool" data-unaccent data-copied={t(lang).copied}>
+<section class="tool" data-unaccent data-copied={t(lang).copied} data-config={JSON.stringify({ s })}>
   <div class="stack">
     <div class="field">
       <label for="ud-in">{s.input}</label>
@@ -22,19 +23,27 @@ const s = S[lang];
       <textarea id="ud-out" rows="5" class="output" readonly data-out></textarea>
     </div>
   </div>
+  <Quip icon="language" />
   <div class="actions">
     <button type="button" class="btn" data-copy>{t(lang).copy}</button>
   </div>
 </section>
 
 <script>
-  import { $, setupCopy } from '../../lib/client';
+  import { $, readConfig, setQuip, setupCopy } from '../../lib/client';
+  import { pick } from '../../lib/quip';
   import { removeDiacritics } from '../../lib/text';
+  import type { DiacriticsStrings } from './strings';
 
   for (const root of document.querySelectorAll<HTMLElement>('[data-unaccent]')) {
     const input = $<HTMLTextAreaElement>(root, '[data-in]');
     const output = $<HTMLTextAreaElement>(root, '[data-out]');
-    const update = () => (output.value = removeDiacritics(input.value));
+    const { s } = readConfig<{ s: DiacriticsStrings }>(root);
+    const update = () => {
+      output.value = removeDiacritics(input.value);
+      const text = input.value.trim();
+      setQuip(root, text === '' ? '' : output.value === input.value ? s.quipNoMarks : pick(s.quips, text.length));
+    };
     input.addEventListener('input', update);
     setupCopy($<HTMLButtonElement>(root, '[data-copy]'), () => output.value, root.dataset.copied ?? '');
     update();

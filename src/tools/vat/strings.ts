@@ -11,6 +11,17 @@ export const S = {
     net: 'Giá chưa VAT',
     gross: 'Giá đã có VAT',
     example: '1.000.000',
+    quipZero: 'Tiền thuế bằng 0. Nhẹ nhàng, không ai phải xót ví.',
+    quipAdd: [
+      'Đã cộng VAT. Giờ báo giá cho khách, khỏi bị hỏi lại "giá này gồm thuế chưa?".',
+      'Phần thuế đã nằm gọn trong giá. Kế toán nhìn thấy chắc sẽ mỉm cười.',
+      'Giá đã có VAT. Con số to hơn một chút, nhưng rõ ràng minh bạch.',
+    ],
+    quipRemove: [
+      'Đã tách VAT khỏi giá. Gọn gàng như nhặt trân châu ra khỏi ly trà sữa.',
+      'Giá trước thuế đây. Giờ bạn biết món hàng thật sự đáng bao nhiêu.',
+      'Tách xong rồi. Phần thuế được bóc riêng, sạch sẽ như bóc vỏ quýt.',
+    ],
   },
   en: {
     mode: 'Mode',
@@ -24,6 +35,17 @@ export const S = {
     net: 'Net price',
     gross: 'Gross price',
     example: '100',
+    quipZero: 'Zero tax. Painless for everyone involved.',
+    quipAdd: [
+      'VAT added. Now you can quote a price without the "does that include tax?" follow-up.',
+      'The tax is tucked neatly into the price. Somewhere, an accountant smiles.',
+      'Price with VAT. A slightly bigger number, but an honest one.',
+    ],
+    quipRemove: [
+      'VAT removed. Clean as fishing the ice out of your drink.',
+      'Here is the pre-tax price. Now you know what the item is really worth.',
+      'Tax peeled off neatly, like the wrapper on a fresh candy bar.',
+    ],
   },
 };
 export type VatStrings = (typeof S)['vi'];

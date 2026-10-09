@@ -11,8 +11,15 @@ export const S = {
     strength: 'Độ mạnh',
     bits: 'bit',
     levels: { weak: 'Yếu', fair: 'Trung bình', strong: 'Mạnh', veryStrong: 'Rất mạnh' },
-    errSets: 'Chọn ít nhất một loại ký tự.',
-    errLength: 'Độ dài phải từ 4 đến 128 và không nhỏ hơn số loại ký tự đã chọn.',
+    errSets: 'Không chọn loại ký tự nào thì mình đành bó tay. Chọn ít nhất một loại ký tự nhé.',
+    errLength: 'Độ dài phải từ 4 đến 128 và không nhỏ hơn số loại ký tự đã chọn. Mật khẩu cũng cần chỗ để thở.',
+    quips: [
+      [40, 'Mật khẩu này hơi mỏng manh, như lời hứa "mai mình đi tập". Tăng độ dài lên nhé.'],
+      [60, 'Tạm ổn, nhưng hacker kiên nhẫn vẫn có thể mò ra. Thêm vài ký tự cho chắc.'],
+      [80, 'Mạnh rồi đấy. Hacker nhìn thấy chắc cũng thở dài một cái.'],
+      [128, 'Mật khẩu này hacker nhìn thấy cũng xin nghỉ phép dài hạn.'],
+      [Infinity, 'Mạnh tới mức chính bạn cũng không nhớ nổi. Lưu vào trình quản lý mật khẩu ngay nhé.'],
+    ] as [number, string][],
   },
   en: {
     password: 'Password',
@@ -26,8 +33,15 @@ export const S = {
     strength: 'Strength',
     bits: 'bits',
     levels: { weak: 'Weak', fair: 'Fair', strong: 'Strong', veryStrong: 'Very strong' },
-    errSets: 'Select at least one character type.',
-    errLength: 'Length must be 4 to 128 and at least the number of selected types.',
+    errSets: 'No character types, no password. Please select at least one character type.',
+    errLength: 'Length must be 4 to 128 and at least the number of selected types. Passwords need room to breathe.',
+    quips: [
+      [40, 'About as sturdy as a New Year resolution. Try a longer one.'],
+      [60, 'Not bad, but a patient hacker could get there. Add a few characters.'],
+      [80, 'Strong. A hacker would look at this and sigh.'],
+      [128, 'A hacker saw this password and quietly updated their CV.'],
+      [Infinity, 'So strong even you will not remember it. Put it in a password manager.'],
+    ] as [number, string][],
   },
 };
 export type PasswordStrings = (typeof S)['vi'];

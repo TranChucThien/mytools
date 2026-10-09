@@ -1,4 +1,5 @@
 ---
+import Quip from '../../components/Quip.astro';
 import { t } from '../../i18n';
 import type { Lang, ToolMeta } from '../../lib/types';
 
@@ -19,6 +20,7 @@ const config = {
     tooMany: s.rndErrTooMany,
     copied: s.copied,
   },
+  quips: { one: s.rndQuipOne, lucky: s.rndQuipLucky, many: s.rndQuipMany },
 };
 ---
 
@@ -48,21 +50,24 @@ const config = {
     <button type="button" class="btn btn-secondary btn-sm" data-copy>{s.copy}</button>
   </div>
   <p class="error" data-error></p>
+  <Quip icon="dice-5" />
 </section>
 
 <script>
-  import { $, readConfig, setError, setupCopy } from '../../lib/client';
+  import { $, readConfig, setError, setQuip, setupCopy } from '../../lib/client';
   import { formatNumber, parseNumber } from '../../lib/number';
+  import { fill, pick } from '../../lib/quip';
   import type { Lang } from '../../lib/types';
   import { randomInts, type RandomError } from './logic';
 
   interface Config {
     lang: Lang;
     s: Record<'invalid' | RandomError | 'copied', string>;
+    quips: { one: string[]; lucky: string; many: string[] };
   }
 
   for (const root of document.querySelectorAll<HTMLElement>('[data-rnd]')) {
-    const { lang, s } = readConfig<Config>(root);
+    const { lang, s, quips } = readConfig<Config>(root);
     const minIn = $<HTMLInputElement>(root, '[data-min]');
     const maxIn = $<HTMLInputElement>(root, '[data-max]');
     const countIn = $<HTMLInputElement>(root, '[data-count]');
@@ -77,6 +82,7 @@ const config = {
       inputs.forEach((el, i) => setError(el, [min, max, count][i] === null));
       if (min == null || max == null || count == null) {
         errorEl.textContent = s.invalid;
+        setQuip(root, '');
         return;
       }
       const r = randomInts({ min, max, count, unique: uniqueIn.checked });
@@ -85,6 +91,7 @@ const config = {
         setError(countIn, r.error === 'count' || r.error === 'tooMany');
         setError(minIn, r.error === 'minMax' || r.error === 'range');
         setError(maxIn, r.error === 'minMax' || r.error === 'range');
+        setQuip(root, '');
         return;
       }
       errorEl.textContent = '';
@@ -92,6 +99,14 @@ const config = {
       const shown = r.values.map((v) => (Math.abs(v) >= 10000 ? formatNumber(v, lang) : String(v)));
       valueEl.textContent = shown.join(', ');
       copyText = r.values.join(', ');
+      // A new line per draw, seeded by the numbers themselves.
+      const seed = r.values.reduce((sum, v) => sum + Math.abs(v), 0);
+      const n = r.values[0]!;
+      const quip =
+        r.values.length > 1
+          ? fill(pick(quips.many, seed), { count: r.values.length })
+          : fill(Math.abs(n) % 10 === 8 ? quips.lucky : pick(quips.one, seed), { n: shown[0]! });
+      setQuip(root, quip);
     };
 
     $<HTMLFormElement>(root, '[data-form]').addEventListener('submit', (e) => {

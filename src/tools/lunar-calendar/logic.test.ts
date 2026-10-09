@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canChiDay, canChiYear, lunarMonthLength, lunarToSolar, solarToLunar } from './logic';
+import { auspiciousHours, canChiDay, canChiHour, canChiYear, hourBranch, lunarMonthLength, lunarToSolar, nextTet, solarToLunar } from './logic';
 
 const TET: [number, number, number][] = [
   [2020, 1, 25],
@@ -60,5 +60,51 @@ describe('validation and names', () => {
     expect(canChiYear(2027)).toBe('Đinh Mùi');
     // 1 Jan 2000 was a Mậu Ngọ day.
     expect(canChiDay({ y: 2000, m: 1, d: 1 })).toBe('Mậu Ngọ');
+  });
+});
+
+describe('hours', () => {
+  // Pick days by their stem via canChiDay, which is pinned against published dates above.
+  const findDay = (prefix: string) => {
+    for (let d = 1; d <= 31; d++) if (canChiDay({ y: 2026, m: 1, d }).startsWith(prefix)) return { y: 2026, m: 1, d };
+    throw new Error(prefix);
+  };
+  it('maps clock hours to the 12 branches', () => {
+    expect(hourBranch(23)).toBe(0);
+    expect(hourBranch(0)).toBe(0);
+    expect(hourBranch(1)).toBe(1);
+    expect(hourBranch(11)).toBe(6);
+    expect(hourBranch(22)).toBe(11);
+  });
+  it('starts the Tý hour at Giáp on Giáp and Kỷ days, Bính on Ất days', () => {
+    const giap = findDay('Giáp');
+    expect(canChiHour(giap, 0)).toBe('Giáp Tý');
+    expect(canChiHour(giap, 12)).toBe('Canh Ngọ');
+    expect(canChiHour(findDay('Kỷ'), 1)).toBe('Ất Sửu');
+    // 23:00 on a Giáp day is already the Tý hour of the following Ất day.
+    expect(canChiHour(giap, 23)).toBe('Bính Tý');
+  });
+  it('lists the six hoàng đạo hours by day branch', () => {
+    const names = (prefix: string) => auspiciousHours(findDay(prefix)).map((h) => h.name);
+    const byBranch = (branch: string) => {
+      for (let d = 1; d <= 31; d++) {
+        const date = { y: 2026, m: 3, d };
+        if (canChiDay(date).endsWith(branch)) return auspiciousHours(date).map((h) => h.name);
+      }
+      throw new Error(branch);
+    };
+    expect(byBranch('Tý')).toEqual(['Tý', 'Sửu', 'Mão', 'Ngọ', 'Thân', 'Dậu']);
+    expect(byBranch('Mão')).toEqual(['Tý', 'Dần', 'Mão', 'Ngọ', 'Mùi', 'Dậu']);
+    expect(byBranch('Hợi')).toEqual(['Sửu', 'Thìn', 'Ngọ', 'Mùi', 'Tuất', 'Hợi']);
+    expect(names('Giáp')).toHaveLength(6);
+    expect(auspiciousHours(findDay('Giáp'))[0]!.range).toMatch(/^\d\d:00 - \d\d:59$/);
+  });
+});
+
+describe('nextTet', () => {
+  it('finds the next lunar new year', () => {
+    expect(nextTet({ y: 2026, m: 10, d: 9 })).toEqual({ y: 2027, m: 2, d: 6 });
+    expect(nextTet({ y: 2026, m: 2, d: 16 })).toEqual({ y: 2026, m: 2, d: 17 });
+    expect(nextTet({ y: 2026, m: 2, d: 17 })).toEqual({ y: 2027, m: 2, d: 6 });
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { ageBetween, parseIsoDate } from './logic';
+import { ageBetween, parseIsoDate, spanBetween } from './logic';
 
 const d = (s: string) => parseIsoDate(s)!;
 
@@ -35,5 +35,34 @@ describe('parseIsoDate', () => {
     expect(parseIsoDate('2023-02-29')).toBeNull();
     expect(parseIsoDate('')).toBeNull();
     expect(parseIsoDate('2024-02-29')).toEqual({ y: 2024, m: 2, d: 29 });
+  });
+});
+
+describe('spanBetween', () => {
+  const t = (h: number, mi = 0, s = 0) => ({ h, mi, s });
+  it('counts down to the second', () => {
+    expect(spanBetween({ y: 1995, m: 8, d: 15 }, t(7, 30), { y: 2026, m: 10, d: 8 }, t(9, 45, 10))).toEqual({
+      years: 31,
+      months: 1,
+      days: 23,
+      hours: 2,
+      minutes: 15,
+      seconds: 10,
+      totalSeconds: 11_377 * 86_400 + 2 * 3600 + 15 * 60 + 10,
+    });
+  });
+  it('borrows a day when the end clock is earlier than the start clock', () => {
+    expect(spanBetween({ y: 2000, m: 1, d: 31 }, t(22), { y: 2000, m: 3, d: 1 }, t(6))).toMatchObject({
+      years: 0,
+      months: 1,
+      days: 0,
+      hours: 8,
+      minutes: 0,
+    });
+  });
+  it('handles a leap-day birth and rejects reversed moments', () => {
+    expect(spanBetween({ y: 2024, m: 2, d: 29 }, t(12), { y: 2025, m: 2, d: 28 }, t(12))).toMatchObject({ years: 1, months: 0, days: 0 });
+    expect(spanBetween({ y: 2026, m: 1, d: 1 }, t(10), { y: 2026, m: 1, d: 1 }, t(9, 59))).toBeNull();
+    expect(spanBetween({ y: 2026, m: 1, d: 1 }, t(10), { y: 2026, m: 1, d: 1 }, t(10))).toMatchObject({ totalSeconds: 0, days: 0 });
   });
 });

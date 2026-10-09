@@ -1,4 +1,5 @@
 ---
+import Quip from '../../components/Quip.astro';
 import { t } from '../../i18n';
 import type { Lang, ToolMeta } from '../../lib/types';
 
@@ -20,6 +21,7 @@ const config = {
     noChange: s.pctNoChange,
     copied: s.copied,
   },
+  quips: { of: s.pctQuipOf, what: s.pctQuipWhat, change: s.pctQuipChange },
 };
 // Pre-filled examples so a result is visible immediately.
 const ex = { a: '20', b: '150', c: '30', d: '150', e: '100', f: '125' };
@@ -40,6 +42,7 @@ const ex = { a: '20', b: '150', c: '30', d: '150', e: '100', f: '125' };
       <span class="result-formula" data-formula></span>
     </div>
     <p class="error" data-error></p>
+    <Quip icon="percentage" />
   </section>
 
   <section class="tool" data-mode="what">
@@ -55,6 +58,7 @@ const ex = { a: '20', b: '150', c: '30', d: '150', e: '100', f: '125' };
       <span class="result-formula" data-formula></span>
     </div>
     <p class="error" data-error></p>
+    <Quip icon="percentage" />
   </section>
 
   <section class="tool" data-mode="change">
@@ -71,22 +75,26 @@ const ex = { a: '20', b: '150', c: '30', d: '150', e: '100', f: '125' };
       <span class="result-formula" data-formula></span>
     </div>
     <p class="error" data-error></p>
+    <Quip icon="percentage" />
   </section>
 </div>
 
 <script>
-  import { $, readConfig, setError, setupCopy } from '../../lib/client';
+  import { $, readConfig, setError, setQuip, setupCopy } from '../../lib/client';
   import { formatNumber, parseNumber } from '../../lib/number';
+  import { band } from '../../lib/quip';
   import type { Lang } from '../../lib/types';
   import { percentChange, percentOf, whatPercent } from './logic';
+  import type { UiStrings } from '../../i18n';
 
   interface Config {
     lang: Lang;
     s: Record<'invalid' | 'divZero' | 'fromZero' | 'increase' | 'decrease' | 'noChange' | 'copied', string>;
+    quips: { of: UiStrings['pctQuipOf']; what: UiStrings['pctQuipWhat']; change: UiStrings['pctQuipChange'] };
   }
 
   for (const root of document.querySelectorAll<HTMLElement>('[data-pct]')) {
-    const { lang, s } = readConfig<Config>(root);
+    const { lang, s, quips } = readConfig<Config>(root);
     const f = (n: number) => formatNumber(n, lang);
 
     for (const card of root.querySelectorAll<HTMLElement>('[data-mode]')) {
@@ -98,8 +106,9 @@ const ex = { a: '20', b: '150', c: '30', d: '150', e: '100', f: '125' };
       const errorEl = $(card, '[data-error]');
       let copyText = '';
 
-      const show = (value: string, formula: string, error = '') => {
+      const show = (value: string, formula: string, error = '', quip = '') => {
         valueEl.textContent = value;
+        setQuip(card, quip);
         formulaEl.textContent = formula;
         errorEl.textContent = error;
         copyText = value;
@@ -117,18 +126,23 @@ const ex = { a: '20', b: '150', c: '30', d: '150', e: '100', f: '125' };
 
         if (mode === 'of') {
           const r = percentOf(x, y);
-          return show(f(r), `${f(x)} × ${f(y)} ÷ 100 = ${f(r)}`);
+          const q = quips.of;
+          const quip = x === 0 ? q.zero : x === 100 ? q.hundred : band(x, q.bands);
+          return show(f(r), `${f(x)} × ${f(y)} ÷ 100 = ${f(r)}`, '', quip);
         }
         if (mode === 'what') {
           const r = whatPercent(x, y);
           if (r === null) return show('-', '', s.divZero);
-          return show(`${f(r)}%`, `${f(x)} ÷ ${f(y)} × 100 = ${f(r)}%`);
+          const q = quips.what;
+          const quip = r === 0 ? q.zero : r === 100 ? q.hundred : band(r, q.bands);
+          return show(`${f(r)}%`, `${f(x)} ÷ ${f(y)} × 100 = ${f(r)}%`, '', quip);
         }
         const r = percentChange(x, y);
         if (r === null) return show('-', '', s.fromZero);
         const label = r > 0 ? s.increase : r < 0 ? s.decrease : s.noChange;
         const value = r === 0 ? label : `${label} ${f(Math.abs(r))}%`;
-        show(value, `(${f(y)} − ${f(x)}) ÷ |${f(x)}| × 100 = ${f(r)}%`);
+        const quip = r === 0 ? quips.change.same : band(r, quips.change.bands);
+        show(value, `(${f(y)} − ${f(x)}) ÷ |${f(x)}| × 100 = ${f(r)}%`, '', quip);
         copyText = `${f(r)}%`;
       };
 

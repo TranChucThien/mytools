@@ -1,4 +1,5 @@
 ---
+import Quip from '../../components/Quip.astro';
 import type { Lang, ToolMeta } from '../../lib/types';
 import { S } from './strings';
 
@@ -29,11 +30,13 @@ const s = S[lang];
   <div class="result" aria-live="polite" data-result hidden>
     <ul class="winners" data-winners></ul>
   </div>
+  <Quip icon="hand-finger" />
   <p class="error" data-error></p>
 </section>
 
 <script>
-  import { $, readConfig } from '../../lib/client';
+  import { $, readConfig, setQuip } from '../../lib/client';
+  import { fill } from '../../lib/quip';
   import { formatNumber, parseNumber } from '../../lib/number';
   import type { Lang } from '../../lib/types';
   import { parseNames, pickNames } from './logic';
@@ -53,12 +56,16 @@ const s = S[lang];
       if (!r.ok) {
         $(root, '[data-error]').textContent = r.error === 'empty' ? s.errEmpty : s.errCount;
         result.hidden = true;
+        setQuip(root, '');
         return;
       }
       $(root, '[data-error]').textContent = '';
       const ul = $(root, '[data-winners]');
       ul.replaceChildren(...r.winners.map((w) => Object.assign(document.createElement('li'), { textContent: w })));
       result.hidden = false;
+      // Quip choice is not security-sensitive, so Math.random is fine here.
+      const lines = r.winners.length === 1 ? s.quipsOne : s.quipsMany;
+      setQuip(root, fill(lines[Math.floor(Math.random() * lines.length)]!, { name: r.winners[0]!, n: formatNumber(r.winners.length, lang) }));
       if ($<HTMLInputElement>(root, '[data-remove]').checked) {
         list.value = r.rest.join('\n');
         hint();

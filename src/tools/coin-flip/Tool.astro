@@ -1,4 +1,5 @@
 ---
+import Quip from '../../components/Quip.astro';
 import type { Lang, ToolMeta } from '../../lib/types';
 import { S } from './strings';
 
@@ -23,10 +24,12 @@ const s = S[lang];
     <div><dt>{s.tails}</dt><dd data-tails>0</dd></div>
     <div><dt>{s.total}</dt><dd data-total>0</dd></div>
   </dl>
+  <Quip icon="coin" />
 </section>
 
 <script>
-  import { $, readConfig } from '../../lib/client';
+  import { $, readConfig, setQuip } from '../../lib/client';
+  import { fill } from '../../lib/quip';
   import { formatNumber } from '../../lib/number';
   import type { Lang } from '../../lib/types';
   import { flipCoin } from './logic';
@@ -37,6 +40,8 @@ const s = S[lang];
     const face = $(root, '[data-face]');
     let heads = 0;
     let tails = 0;
+    let last = '';
+    let streak = 0;
     const render = () => {
       $(root, '[data-heads]').textContent = formatNumber(heads, lang);
       $(root, '[data-tails]').textContent = formatNumber(tails, lang);
@@ -47,6 +52,11 @@ const s = S[lang];
       if (side === 'heads') heads++;
       else tails++;
       face.textContent = side === 'heads' ? s.heads : s.tails;
+      streak = side === last ? streak + 1 : 1;
+      last = side;
+      // Quip choice is not security-sensitive, so Math.random is fine here.
+      const lines = side === 'heads' ? s.quipsHeads : s.quipsTails;
+      setQuip(root, streak >= 3 ? fill(s.quipStreak, { side: face.textContent, n: streak }) : lines[Math.floor(Math.random() * lines.length)]!);
       // Restart the flip animation as feedback that a new result arrived.
       face.classList.remove('is-flipping');
       void face.offsetWidth;
@@ -55,6 +65,9 @@ const s = S[lang];
     });
     $(root, '[data-reset]').addEventListener('click', () => {
       heads = tails = 0;
+      last = '';
+      streak = 0;
+      setQuip(root, '');
       face.textContent = s.ready;
       render();
     });

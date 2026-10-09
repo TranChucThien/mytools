@@ -10,6 +10,14 @@ export const S = {
     reading: 'Thời gian đọc',
     minutes: 'phút',
     underMinute: 'dưới 1 phút',
+    quips: [
+      [10, 'Ngắn gọn như tin nhắn "ok" của sếp. Súc tích là một nghệ thuật.'],
+      [50, 'Vừa một caption Facebook, đủ dài để thả thính, đủ ngắn để người ta đọc hết.'],
+      [300, 'Cỡ một email công việc. Nhớ đọc lại trước khi bấm Gửi nhé.'],
+      [1000, 'Một bài viết tử tế rồi đấy. Pha ly trà đá rồi đọc lại cho chắc.'],
+      [3000, 'Dài cỡ bài tiểu luận. Thầy cô chấm bài chắc cần thêm một ly cà phê.'],
+      [Infinity, 'Đây là văn bản hay tiểu thuyết vậy bạn? Nhà xuất bản đang chờ đấy.'],
+    ] as [number, string][],
   },
   en: {
     text: 'Text',
@@ -22,6 +30,14 @@ export const S = {
     reading: 'Reading time',
     minutes: 'min',
     underMinute: 'under 1 min',
+    quips: [
+      [10, 'Short and sweet, like a manager replying "ok". Brevity is an art.'],
+      [50, 'Social media caption size. Long enough to be clever, short enough to be read.'],
+      [300, 'About one work email. Read it once more before you hit Send.'],
+      [1000, 'A proper article. Grab a coffee and give it one last proofread.'],
+      [3000, 'Essay territory. Whoever grades this will need a second coffee.'],
+      [Infinity, 'Is this a document or a novel? Somewhere a publisher is waiting.'],
+    ] as [number, string][],
   },
 };
 export type WordStrings = (typeof S)['vi'];

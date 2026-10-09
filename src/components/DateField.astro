@@ -1,0 +1,45 @@
+---
+/**
+ * Date input that reads and shows dd/mm/yyyy on VI pages (mm/dd/yyyy on EN) whatever the browser
+ * locale, with a calendar button that opens the native picker. Read it with `readDate()`.
+ */
+import { t } from '../i18n';
+import { DATE_PLACEHOLDER } from '../lib/date';
+import type { Lang } from '../lib/types';
+import Icon from './Icon.astro';
+
+interface Props {
+  id: string;
+  label: string;
+  lang: Lang;
+  /** Data attribute put on the text input, e.g. "birth" gives data-birth. */
+  name: string;
+  /** Initial value as already-formatted text. */
+  value?: string;
+  min?: string;
+  max?: string;
+}
+const { id, label, lang, name, value = '', min, max } = Astro.props;
+const attr = { [`data-${name}`]: true };
+---
+
+<div class="field">
+  <label for={id}>{label}</label>
+  <div class="date-input" data-datefield data-lang={lang}>
+    <input
+      id={id}
+      type="text"
+      inputmode="numeric"
+      autocomplete="off"
+      maxlength="10"
+      placeholder={DATE_PLACEHOLDER[lang]}
+      value={value}
+      data-date-text
+      {...attr}
+    />
+    <button type="button" class="date-pick" aria-label={t(lang).pickDate} data-date-pick>
+      <Icon name="calendar" />
+    </button>
+    <input type="date" class="date-native" tabindex="-1" aria-hidden="true" min={min} max={max} data-date-native />
+  </div>
+</div>

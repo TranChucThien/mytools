@@ -1,5 +1,9 @@
 ---
-import { t } from '../../i18n';
+import DateField from '../../components/DateField.astro';
+import Quip from '../../components/Quip.astro';
+import Ticker from '../../components/Ticker.astro';
+import TimeField from '../../components/TimeField.astro';
+import { formatDate } from '../../lib/date';
 import type { Lang, ToolMeta } from '../../lib/types';
 import { S } from './strings';
 
@@ -9,76 +13,103 @@ interface Props {
 }
 const { lang } = Astro.props;
 const s = S[lang];
-const config = { lang, s, copied: t(lang).copied };
 ---
 
-<section class="tool" data-age data-config={JSON.stringify(config)}>
-  <div class="grid">
-    <div class="field">
-      <label for="age-birth">{s.birth}</label>
-      <input id="age-birth" type="date" value="2000-01-01" min="1900-01-01" data-birth />
-    </div>
-    <div class="field">
-      <label for="age-ref">{s.ref}</label>
-      <input id="age-ref" type="date" data-ref />
-    </div>
+<section class="tool" data-age data-config={JSON.stringify({ lang, s })}>
+  <div class="dt-row">
+    <DateField id="age-birth" label={s.birth} lang={lang} name="birth" value={formatDate({ y: 2000, m: 1, d: 1 }, lang)} min="1900-01-01" />
+    <TimeField id="age-birth-time" label={s.birthTime} lang={lang} name="birth-time" />
+  </div>
+  <div class="dt-row">
+    <DateField id="age-ref" label={s.ref} lang={lang} name="ref" />
+    <TimeField id="age-ref-time" label={s.refTime} lang={lang} name="ref-time" />
   </div>
   <div class="result" aria-live="polite">
     <span class="result-value" data-value></span>
   </div>
   <p class="error" data-error></p>
+  <Ticker lang={lang} icon="planet" />
   <dl class="stats">
     <div><dt>{s.totalDays}</dt><dd data-total>-</dd></div>
     <div><dt>{s.next}</dt><dd data-next>-</dd></div>
     <div><dt>{s.daysLeft}</dt><dd data-left>-</dd></div>
     <div><dt>{s.bornOn}</dt><dd data-weekday>-</dd></div>
+    <div><dt>{s.heartbeats}</dt><dd data-heart>-</dd></div>
+    <div><dt>{s.sleep}</dt><dd data-sleep>-</dd></div>
   </dl>
+  <Quip icon="cake" />
 </section>
 
 <script>
-  import { $, readConfig } from '../../lib/client';
+  import { $, readConfig, setQuip } from '../../lib/client';
+  import { formatDate, formatDateWithWeekday, formatTime, localNow, parseTimeText, weekdayName, type Hms } from '../../lib/date';
+  import { everySecond, readDate, renderTicker, setupDateFields, writeDate } from '../../lib/date-client';
   import { formatNumber } from '../../lib/number';
+  import { band, fill } from '../../lib/quip';
   import type { Lang } from '../../lib/types';
-  import { ageBetween, parseIsoDate, type Ymd } from './logic';
+  import { ageBetween, spanBetween } from './logic';
   import type { AgeStrings } from './strings';
 
-  const LOCALE = { vi: 'vi-VN', en: 'en-US' } as const;
+  const MIDNIGHT: Hms = { h: 0, mi: 0, s: 0 };
 
   for (const root of document.querySelectorAll<HTMLElement>('[data-age]')) {
     const { lang, s } = readConfig<{ lang: Lang; s: AgeStrings }>(root);
-    const birthIn = $<HTMLInputElement>(root, '[data-birth]');
-    const refIn = $<HTMLInputElement>(root, '[data-ref]');
+    setupDateFields(root, lang);
+    const input = (sel: string) => $<HTMLInputElement>(root, sel);
     const set = (sel: string, text: string) => ($(root, sel).textContent = text);
     const unit = (n: number, one: string, many: string) => `${formatNumber(n, lang)} ${n === 1 ? one : many}`;
-    const fmtDate = (d: Ymd) =>
-      new Intl.DateTimeFormat(LOCALE[lang], { dateStyle: 'long', timeZone: 'UTC' }).format(Date.UTC(d.y, d.m - 1, d.d));
+    const ticker = $(root, '[data-ticker]');
+    writeDate(input('[data-ref]'), localNow().date, lang);
 
-    const now = new Date();
-    refIn.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    const clear = (msg: string) => {
+      set('[data-value]', '-');
+      set('[data-error]', msg);
+      for (const sel of ['[data-total]', '[data-next]', '[data-left]', '[data-weekday]', '[data-heart]', '[data-sleep]']) set(sel, '-');
+      renderTicker(ticker, null);
+      setQuip(root, '');
+      live(false);
+    };
 
     const update = () => {
-      const birth = parseIsoDate(birthIn.value);
-      const ref = parseIsoDate(refIn.value);
-      const clear = (msg: string) => {
-        set('[data-value]', '-');
-        set('[data-error]', msg);
-        for (const sel of ['[data-total]', '[data-next]', '[data-left]', '[data-weekday]']) set(sel, '-');
-      };
+      const birth = readDate(input('[data-birth]'), lang);
+      const ref = readDate(input('[data-ref]'), lang);
+      const birthTime = parseTimeText(input('[data-birth-time]').value);
+      const refTime = parseTimeText(input('[data-ref-time]').value);
       if (!birth || !ref) return clear(s.errDate);
+      if (birthTime === null || refTime === null) return clear(s.errTime);
+
+      // No end time and the end date is today: count up to this very second.
+      const now = localNow();
+      const isLive = refTime === undefined && formatDate(ref, 'vi') === formatDate(now.date, 'vi');
+      const end = isLive ? now.time : (refTime ?? MIDNIGHT);
+      const span = spanBetween(birth, birthTime ?? MIDNIGHT, ref, end);
       const age = ageBetween(birth, ref);
-      if (!age) return clear(s.errOrder);
+      if (!span || !age) return clear(s.errOrder);
+
       set('[data-error]', '');
-      set('[data-value]', [unit(age.years, s.year, s.years), unit(age.months, s.month, s.months), unit(age.days, s.day, s.days)].join(' '));
+      const parts = [unit(span.years, s.year, s.years), unit(span.months, s.month, s.months), unit(span.days, s.day, s.days)];
+      if (birthTime) parts.push(`${span.hours} ${s.hour}`, `${span.minutes} ${s.minute}`);
+      set('[data-value]', parts.join(' '));
       set('[data-total]', unit(age.totalDays, s.day, s.days));
-      set('[data-next]', fmtDate(age.nextBirthday));
+      set('[data-next]', formatDateWithWeekday(age.nextBirthday, lang));
       set('[data-left]', age.daysToBirthday === 0 ? s.today : unit(age.daysToBirthday, s.day, s.days));
-      set(
-        '[data-weekday]',
-        new Intl.DateTimeFormat(LOCALE[lang], { weekday: 'long', timeZone: 'UTC' }).format(Date.UTC(birth.y, birth.m - 1, birth.d)),
-      );
+      set('[data-weekday]', weekdayName(birth, lang));
+      // About 70 beats a minute and a third of life asleep: rough, cheerful estimates.
+      set('[data-heart]', formatNumber(Math.round((span.totalSeconds / 60) * 70), lang));
+      set('[data-sleep]', unit(Math.floor(age.totalDays / 3 / 365.25), s.year, s.years));
+
+      const foot = !birthTime
+        ? s.footNoTime
+        : isLive
+          ? ''
+          : fill(s.footUntil, { time: formatTime(end), date: formatDate(ref, lang) });
+      renderTicker(ticker, span.totalSeconds, isLive ? s.tickerLive : s.tickerFixed, foot, lang);
+      setQuip(root, age.daysToBirthday === 0 ? s.quipBirthday : band(span.years, s.quips));
+      live(isLive);
     };
-    birthIn.addEventListener('input', update);
-    refIn.addEventListener('input', update);
+    const live = everySecond(update);
+    root.addEventListener('input', update);
+    root.addEventListener('change', update);
     update();
   }
 </script>

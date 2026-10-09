@@ -12,6 +12,8 @@ faq:
     a: "Công cụ đếm số tháng tròn tính từ ngày bắt đầu, phần còn lại là số ngày lẻ. Ví dụ từ 08/10/2026 đến 31/12/2026 là 2 tháng 23 ngày: 08/10 đến 08/12 là 2 tháng, thêm 23 ngày nữa là đến 31/12."
   - q: "Công cụ đếm ngày có miễn phí không?"
     a: "Hoàn toàn miễn phí, không cần đăng ký. Mọi phép tính chạy trên trình duyệt của bạn."
+  - q: "Có tính khoảng cách theo giờ, phút được không?"
+    a: "Có. Nhập Từ giờ và Đến giờ (tùy chọn). Ví dụ từ 08:00 ngày 01/01/2026 đến 17:30 ngày 17/02/2026 là 47 ngày 9 giờ 30 phút. Khi đã có giờ, tùy chọn Tính cả ngày cuối được bỏ qua vì kết quả đã chính xác tới từng phút. Đồng hồ bên dưới đếm ngược theo thời gian thực tới ngày kết thúc."
 ---
 
 ## Cách dùng công cụ đếm ngày giữa hai ngày

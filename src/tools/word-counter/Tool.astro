@@ -1,4 +1,5 @@
 ---
+import Quip from '../../components/Quip.astro';
 import type { Lang, ToolMeta } from '../../lib/types';
 import { S } from './strings';
 
@@ -23,11 +24,13 @@ const s = S[lang];
     <div><dt>{s.paragraphs}</dt><dd data-paragraphs>0</dd></div>
     <div><dt>{s.reading}</dt><dd data-reading>0</dd></div>
   </dl>
+  <Quip icon="writing" />
 </section>
 
 <script>
-  import { $, readConfig } from '../../lib/client';
+  import { $, readConfig, setQuip } from '../../lib/client';
   import { formatNumber } from '../../lib/number';
+  import { band } from '../../lib/quip';
   import type { Lang } from '../../lib/types';
   import { countText } from './logic';
   import type { WordStrings } from './strings';
@@ -45,6 +48,7 @@ const s = S[lang];
       set('[data-paragraphs]', r.paragraphs);
       $(root, '[data-reading]').textContent =
         r.words === 0 ? '0' : r.readingMinutes < 1 ? s.underMinute : `${formatNumber(Math.ceil(r.readingMinutes), lang)} ${s.minutes}`;
+      setQuip(root, r.words === 0 ? '' : band(r.words, s.quips));
     };
     text.addEventListener('input', update);
     update();

@@ -12,6 +12,8 @@ faq:
     a: "Có. Ngoài tuổi, bạn còn xem được tổng số ngày đã sống, số ngày còn lại đến sinh nhật kế tiếp và thứ trong tuần của ngày bạn chào đời."
   - q: "Ngày sinh tôi nhập có bị lưu lại không?"
     a: "Không. Mọi phép tính chạy ngay trên trình duyệt của bạn, ngày sinh không được gửi lên máy chủ nào."
+  - q: "Có tính được tuổi chính xác đến từng giờ, từng giây không?"
+    a: "Có. Nhập thêm Giờ sinh (tùy chọn), ví dụ 07:30. Nếu để trống ô Đến giờ và ngày tính là hôm nay, đồng hồ bên dưới đếm số ngày, giờ, phút, giây bạn đã sống theo thời gian thực. Ví dụ sinh lúc 07:30 ngày 15/08/1995 thì đến 09:45 ngày 08/10/2026 là 31 năm 1 tháng 23 ngày 2 giờ 15 phút."
 ---
 
 ## Cách dùng công cụ tính tuổi

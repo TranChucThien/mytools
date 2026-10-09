@@ -12,6 +12,8 @@ faq:
     a: "The tool counts whole calendar months from the start date, then the days left over. October 8 to December 31, 2026 is 2 months and 23 days: October 8 to December 8 is 2 months, plus 23 more days."
   - q: "Is this days between dates calculator free?"
     a: "Yes, completely free with no signup. Everything runs in your browser."
+  - q: "Can I count hours and minutes too?"
+    a: "Yes. Fill in Start time and End time (optional). From 08:00 on January 1, 2026 to 17:30 on February 17, 2026 is 47 days 9 h 30 min. With times entered, the Include end date option is ignored because the result is already exact to the minute. The counter below counts down live to the end date."
 ---
 
 ## How to use the days between dates calculator

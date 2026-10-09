@@ -45,11 +45,17 @@ No pure `#000`/`#fff`. Theme follows `prefers-color-scheme`; no section inverts.
 - **Result panel**: `--accent-soft` bg, value in 800 weight, formula in `--accent-ink` at 0.875rem.
 - **Tool tile** (home, related): icon chip (40px, `--accent-soft` bg, `--accent-ink` icon) + name + one line.
 - **Icons**: `@tabler/icons` outline, stroke 2, via `Icon.astro`. Never hand-draw SVG.
+- **Date field** (`DateField.astro`): text input that reads and shows `dd/mm/yyyy` on VI pages (`mm/dd/yyyy` on EN) regardless of browser locale, auto-inserts `/` while typing, calendar button opens the native picker. Never render a bare `<input type="date">`: its display format follows the browser, not the page.
+- **Time field** (`TimeField.astro`): optional 24-hour `HH:mm`, label marked "(tùy chọn)". Empty means no time.
+- **Ticker** (`Ticker.astro`): live day / hour / minute / second counter on `--ink`, used where time adds interest (age, countdowns, Tết).
+- **Quip** (`Quip.astro`): dashed-accent speech bubble under the result with one humorous line chosen from the result.
 
 ## Rules
 
 - One accent. No emoji. **No em dash or en dash in visible copy**; use a hyphen, comma or colon.
 - Tool first: H1 + one-sentence intro, then the tool, then explanation, FAQ, related tools.
 - Every number input accepts the page locale (`1.234,5` VI / `1,234.5` EN).
+- Dates on VI pages are always `dd/mm/yyyy` (zero-padded), in inputs, results and content; times are 24-hour `HH:mm`.
+- Voice: friendly and humorous. Each tool has quips (light jokes chosen by the result) and friendly error messages that still say exactly what to fix. Labels, units and numbers stay plain. Kind humor only: never about bodies, gender, region or politics; finance jokes never misstate the law.
 - Motion: transitions on `transform`/`opacity`/`background-color` ≤ 200ms, removed under `prefers-reduced-motion`.
 - Mobile < 768px: single column, 16px gutters, no horizontal scroll.

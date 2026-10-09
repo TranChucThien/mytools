@@ -1,4 +1,5 @@
 ---
+import Quip from '../../components/Quip.astro';
 import type { Lang, ToolMeta } from '../../lib/types';
 import { S } from './strings';
 
@@ -31,10 +32,11 @@ const s = S[lang];
   </div>
   <p class="error" data-error></p>
   <dl class="stats" data-out aria-live="polite"></dl>
+  <Quip icon="users-group" />
 </section>
 
 <script>
-  import { $, readConfig, setupCopy } from '../../lib/client';
+  import { $, readConfig, setQuip, setupCopy } from '../../lib/client';
   import { parseNumber } from '../../lib/number';
   import type { Lang } from '../../lib/types';
   import { parseNames } from '../name-picker/logic';
@@ -55,6 +57,7 @@ const s = S[lang];
         $(root, '[data-error]').textContent = r.error === 'empty' ? s.errEmpty : s.errValue;
         out.replaceChildren();
         copyBtn.hidden = true;
+        setQuip(root, '');
         return;
       }
       $(root, '[data-error]').textContent = '';
@@ -71,6 +74,9 @@ const s = S[lang];
       );
       text = r.teams.map((team, i) => `${s.team} ${i + 1}: ${team.join(', ')}`).join('\n');
       copyBtn.hidden = false;
+      // Quip choice is not security-sensitive, so Math.random is fine here.
+      const solo = r.teams.length > 1 && r.teams.some((team) => team.length === 1);
+      setQuip(root, solo ? s.quipSolo : s.quips[Math.floor(Math.random() * s.quips.length)]!);
     });
     setupCopy(copyBtn, () => text, s.copied);
   }

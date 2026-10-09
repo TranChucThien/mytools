@@ -48,3 +48,11 @@ export function debounce<A extends unknown[]>(fn: (...args: A) => void, ms: numb
     timer = setTimeout(() => fn(...args), ms);
   };
 }
+
+/** Show a one-liner in the Quip inside `root`, or hide it for an empty string. */
+export function setQuip(root: ParentNode, text: string): void {
+  const el = root.querySelector<HTMLElement>('[data-quip]');
+  if (!el) return;
+  el.hidden = text === '';
+  el.querySelector('[data-quip-text]')!.textContent = text;
+}

@@ -36,7 +36,10 @@ export const vi = {
   notFoundText: 'Trang bạn tìm không tồn tại hoặc đã được chuyển đi.',
   backHome: 'Về trang chủ',
   footerNote: 'Mọi công cụ đều miễn phí và chạy trên trình duyệt. Dữ liệu của bạn không được gửi đi đâu.',
-  errInvalidNumber: 'Vui lòng nhập một số hợp lệ.',
+  errInvalidNumber: 'Máy tính đọc mãi không ra số này. Nhập lại số hợp lệ giúp nhé, ví dụ 1.234,5.',
+  pickDate: 'Mở lịch',
+  optional: 'tùy chọn',
+  tickerUnits: { days: 'ngày', hours: 'giờ', minutes: 'phút', seconds: 'giây' },
 
   // Percentage
   pctMode1: 'Tính X% của Y',
@@ -50,13 +53,56 @@ export const vi = {
   pctIncrease: 'Tăng',
   pctDecrease: 'Giảm',
   pctNoChange: 'Không đổi',
-  pctDivZero: 'Không thể chia cho 0.',
-  pctChangeFromZero: 'Không tính được phần trăm thay đổi khi giá trị ban đầu là 0.',
+  pctDivZero: 'Toán học xin hàng: không thể chia cho 0. Nhập Y khác 0 nhé.',
+  pctChangeFromZero: 'Từ 0 mà tăng thì tăng bao nhiêu % cũng thành vô cực. Nhập giá trị ban đầu khác 0 nhé.',
+  pctQuipOf: {
+    zero: '0% của bất cứ thứ gì cũng là 0. Phép tính nhanh nhất trong ngày của bạn.',
+    hundred: '100% của Y thì vẫn là Y. Máy tính xác nhận: không có phép màu nào ở đây.',
+    bands: [
+      [0, 'Phần trăm âm thì ra số âm. Toán học vẫn đúng, chỉ là hơi buồn một chút.'],
+      [10, 'Một miếng nhỏ xíu, cỡ phần bánh chưng bạn được chia khi cả họ cùng ăn.'],
+      [50, 'Chưa tới một nửa, như ly trà sữa sau ngụm đầu của đứa bạn "cho xin miếng thôi".'],
+      [100, 'Từ một nửa trở lên. Ai "xin miếng thôi" mà lấy cỡ này thì phải cảnh giác.'],
+      [Infinity, 'Hơn 100%: kết quả còn lớn hơn số gốc. Lãi kiểu này thì ai cũng muốn góp vốn.'],
+    ] as [number, string][],
+  },
+  pctQuipWhat: {
+    zero: 'Đúng 0%. X chưa đóng góp được gì, nhưng tinh thần tham gia là đáng quý.',
+    hundred: 'Đúng 100%: X và Y là một. Ăn ý như cơm trắng với nước mắm.',
+    bands: [
+      [0, 'Ra số âm vì có một bên âm. Kết quả vẫn đúng, chỉ là hơi ngược đời.'],
+      [10, 'Chưa tới 10%. Nhỏ mà có võ, như hạt tiêu trong tô phở.'],
+      [50, 'Dưới một nửa: chưa phải nhân vật chính, nhưng buổi nào cũng có mặt.'],
+      [100, 'Hơn một nửa rồi. Cổ đông lớn đây, nói gì cũng có trọng lượng.'],
+      [Infinity, 'Hơn 100%: phần còn to hơn cả tổng. Đúng kiểu "con nhà người ta" của làng toán.'],
+    ] as [number, string][],
+  },
+  pctQuipChange: {
+    same: 'Không đổi một ly. Ổn định như ly cà phê sáng nào bạn cũng gọi.',
+    bands: [
+      [-50, 'Giảm hơn một nửa. Nếu là giá đồ thì chốt đơn, nếu là doanh số thì gọi họp gấp.'],
+      [-10, 'Giảm khá rõ. Nếu đây là hóa đơn tiền điện thì xin chúc mừng.'],
+      [0, 'Giảm nhẹ. Không nhiều, nhưng đủ để có cớ khoe trong nhóm chat.'],
+      [10, 'Tăng nhẹ, kiểu giá trà sữa sau Tết: không nhiều nhưng ai cũng để ý.'],
+      [100, 'Tăng đáng kể. Nếu là lương thì nhớ khao cả phòng một chầu nhé.'],
+      [Infinity, 'Tăng từ gấp đôi trở lên. Biểu đồ này mà lên slide là cả phòng họp vỗ tay.'],
+    ] as [number, string][],
+  },
   formula: 'Công thức',
 
   // Converter
   convSwap: 'Đổi chiều',
   convTable: 'Bảng quy đổi',
+  convQuipZero: 'Đúng 0 {b}. Chẳng có gì để đổi, nhẹ tênh như ví ngày cuối tháng.',
+  convQuipNegative: 'Số âm cũng đổi được nhé. Máy tính không phán xét, chỉ quy đổi.',
+  convQuips: [
+    [0.01, 'Bé tí ti tính theo {b}. Đổi sang đơn vị nhỏ hơn có khi dễ nhìn hơn đấy.'],
+    [1, 'Chưa tròn 1 {b}. Kiểu "sắp xong rồi sếp ơi" của dân văn phòng.'],
+    [10, 'Một con số gọn gàng, nhớ được mà khỏi cần giấy nhớ dán màn hình.'],
+    [1000, 'Hàng chục, hàng trăm {b}. Đổi xong rồi, giờ có số liệu để kể cho đồng nghiệp.'],
+    [1000000, 'Hàng nghìn {b} rồi đấy. Số to thế này nhớ đếm kỹ dấu chấm.'],
+    [Infinity, 'Con số khổng lồ. Chắc đơn vị {b} cũng bất ngờ vì được dùng nhiều thế.'],
+  ] as [number, string][],
 
   // Random
   rndMin: 'Từ số',
@@ -64,10 +110,24 @@ export const vi = {
   rndCount: 'Số lượng',
   rndUnique: 'Không trùng lặp',
   rndGenerate: 'Tạo số',
-  rndErrMinMax: '“Từ số” phải nhỏ hơn hoặc bằng “Đến số”.',
-  rndErrCount: 'Số lượng phải là số nguyên từ 1 đến 1.000.',
-  rndErrRange: 'Vui lòng nhập số nguyên trong khoảng cho phép.',
-  rndErrTooMany: 'Khoảng số quá nhỏ để lấy ngần ấy số không trùng nhau.',
+  rndErrMinMax: '“Từ số” phải nhỏ hơn hoặc bằng “Đến số”. Đảo lại giúp mình, kẻo máy chóng mặt.',
+  rndErrCount: 'Số lượng phải là số nguyên từ 1 đến 1.000. Nhiều hơn nữa thì máy đếm mỏi tay.',
+  rndErrRange: 'Vui lòng nhập số nguyên trong khoảng cho phép. Số thập phân xin hẹn dịp khác.',
+  rndErrTooMany: 'Khoảng số quá nhỏ để lấy ngần ấy số không trùng nhau. Nới rộng khoảng hoặc bớt số lượng nhé.',
+  rndQuipOne: [
+    'Vũ trụ gửi tới bạn số {n}. Không đổi trả, không bảo hành.',
+    'Số {n} lên sóng, hoàn toàn ngẫu nhiên, không ai đi cửa sau cả.',
+    'Ra {n}. Bốc thăm kiểu này thì cả phòng không ai cãi được.',
+    'Số {n} đây. Cứ tin vào số phận, hoặc bấm lại thêm lần nữa.',
+    'Chúc mừng số {n}, người được chọn của ngày hôm nay.',
+  ],
+  rndQuipLucky: 'Số {n} đuôi 8, nghe đã thấy phát tài phát lộc. Chốt luôn, đừng quay lại.',
+  rndQuipMany: [
+    '{count} con số ra lò, nóng hổi vừa thổi vừa dùng.',
+    'Đủ {count} số, xáo còn kỹ hơn bộ bài ngày Tết.',
+    'Đã bốc {count} số. Ai chê thì bấm lại, máy không giận đâu.',
+    '{count} số ngẫu nhiên, công bằng như chia bánh kẹo cho bọn trẻ con.',
+  ],
 
   // QR
   qrText: 'Nội dung (link hoặc văn bản)',
@@ -78,10 +138,18 @@ export const vi = {
   qrEcc: 'Mức sửa lỗi',
   qrDownloadPng: 'Tải PNG',
   qrDownloadSvg: 'Tải SVG',
-  qrErrEmpty: 'Nhập nội dung để tạo mã QR.',
-  qrErrTooLong: 'Nội dung quá dài (tối đa 2.000 ký tự).',
+  qrErrEmpty: 'Ô nội dung đang trống. Nhập link hoặc văn bản để tạo mã QR nhé.',
+  qrErrTooLong: 'Nội dung quá dài (tối đa 2.000 ký tự). Mã QR chứ có phải tiểu thuyết đâu.',
   qrErrRender: 'Không tạo được mã QR với nội dung này. Hãy thử rút gọn hoặc giảm mức sửa lỗi.',
   qrPrivacy: 'Mã QR được tạo ngay trên trình duyệt. Nội dung bạn nhập không được gửi lên máy chủ nào.',
+  qrQuips: {
+    url: 'Mã QR xong rồi. Ai quét là tới thẳng link, khỏi đọc từng chữ cho nhau nghe.',
+    email: 'Quét là ra địa chỉ email. Hết cảnh đánh vần "a còng" qua điện thoại.',
+    phone: 'Quét là ra số điện thoại. Không còn ai nghe nhầm số 1 thành số 7.',
+    wifi: 'Mã WiFi đây. Từ nay khỏi đọc mật khẩu dài ngoằng cho khách nữa.',
+    long: 'Nội dung khá dài nên mã hơi dày đặc. Vẫn quét được, nhưng in to một chút cho chắc.',
+    text: 'Mã QR đã xong. Một ô vuông nhỏ xíu chứa trọn tâm tư của bạn.',
+  },
 };
 
 type Widen<T> = { [K in keyof T]: T[K] extends string ? string : Widen<T[K]> };

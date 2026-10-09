@@ -8,9 +8,10 @@ const results = [];
 const errors = [];
 const ok = (name, cond, extra = '') => results.push(`${cond ? 'PASS' : 'FAIL'} ${name}${extra ? ' — ' + extra : ''}`);
 
-async function page(width, path) {
+async function page(width, path, clock) {
   const ctx = await b.newContext({ viewport: { width, height: 900 }, acceptDownloads: true });
   const p = await ctx.newPage();
+  if (clock) await p.clock.install({ time: clock });
   p.on('console', (m) => m.type() === 'error' && errors.push(`${path}@${width}: ${m.text()}`));
   p.on('pageerror', (e) => errors.push(`${path}@${width}: ${e.message}`));
   await p.goto(BASE + path, { waitUntil: 'networkidle' });
@@ -109,10 +110,40 @@ for (const width of [390, 1280]) {
   const W = '@1280';
   const val = (p, sel) => p.locator(sel).first().innerText();
   let p = await page(1280, '/tinh-tuoi/');
-  await p.locator('[data-birth]').fill('1995-08-15');
-  await p.locator('[data-ref]').fill('2026-10-08');
+  await p.locator('[data-birth]').fill('15/08/1995');
+  await p.locator('[data-ref]').fill('08/10/2026');
   ok(`age ymd ${W}`, (await val(p, '[data-age] [data-value]')) === '31 năm 1 tháng 23 ngày', await val(p, '[data-age] [data-value]'));
   ok(`age total ${W}`, (await val(p, '[data-total]')) === '11.377 ngày');
+  ok(`age next birthday dd/mm/yyyy ${W}`, (await val(p, '[data-next]')) === 'Chủ nhật, 15/08/2027', await val(p, '[data-next]'));
+  ok(`age quip ${W}`, await p.locator('[data-age] [data-quip]').isVisible());
+  await p.locator('[data-birth-time]').fill('07:30');
+  await p.locator('[data-ref-time]').fill('9h45');
+  ok(`age with time ${W}`, (await val(p, '[data-age] [data-value]')) === '31 năm 1 tháng 23 ngày 2 giờ 15 phút', await val(p, '[data-age] [data-value]'));
+  ok(`age ticker ${W}`, (await val(p, '[data-age] [data-tick="days"]')) === '11.377' && (await val(p, '[data-age] [data-tick="hours"]')) === '02');
+  await p.locator('[data-ref-time]').fill('25:00');
+  ok(`age bad time ${W}`, (await val(p, '[data-age] [data-error]')).length > 0 && !(await p.locator('[data-age] [data-ticker]').isVisible()));
+  await p.locator('[data-birth]').fill('31/02/2000');
+  ok(`age impossible date ${W}`, (await val(p, '[data-age] [data-error]')).includes('dd/mm/yyyy'));
+  await p.locator('[data-birth]').fill('');
+  await p.locator('[data-birth]').pressSequentially('15081995');
+  ok(`age date mask ${W}`, (await p.locator('[data-birth]').inputValue()) === '15/08/1995');
+  await p.close();
+
+  // Live counter with a fake clock paused at 10:00:00 on 09/10/2026.
+  p = await page(1280, '/tinh-tuoi/', new Date(2026, 9, 9, 9, 59, 0));
+  await p.clock.pauseAt(new Date(2026, 9, 9, 10, 0, 0));
+  await p.locator('[data-birth]').fill('09/10/2000');
+  await p.locator('[data-birth-time]').fill('09:59');
+  const before = await val(p, '[data-age] [data-tick="seconds"]');
+  await p.clock.runFor(3000);
+  const after = await val(p, '[data-age] [data-tick="seconds"]');
+  ok(`age live ticker ${W}`, before === '00' && after === '03' && (await val(p, '[data-age] [data-value]')) === '26 năm 0 tháng 0 ngày 0 giờ 1 phút', `${before} -> ${after}`);
+  await p.close();
+
+  p = await page(1280, '/en/age-calculator/');
+  await p.locator('[data-birth]').fill('08/15/1995');
+  await p.locator('[data-ref]').fill('10/08/2026');
+  ok(`age en mm/dd ${W}`, (await val(p, '[data-age] [data-value]')) === '31 years 1 month 23 days', await val(p, '[data-age] [data-value]'));
   await p.close();
 
   p = await page(1280, '/en/discount-calculator/');
@@ -206,9 +237,13 @@ for (const width of [390, 1280]) {
   await p.close();
 
   p = await page(1280, '/dem-ngay/');
-  await p.locator('[data-start]').fill('2026-01-01');
-  await p.locator('[data-end]').fill('2026-02-17');
+  await p.locator('[data-start]').fill('01/01/2026');
+  await p.locator('[data-end]').fill('17/02/2026');
   ok(`date diff ${W}`, (await val(p, '[data-datediff] [data-value]')) === '47 ngày' && (await val(p, '[data-weekdays]')) === '33 ngày');
+  ok(`date diff ticker ${W}`, (await p.locator('[data-datediff] [data-ticker]').isVisible()) && (await p.locator('[data-datediff] [data-quip]').isVisible()));
+  await p.locator('[data-start-time]').fill('08:00');
+  await p.locator('[data-end-time]').fill('17:30');
+  ok(`date diff with time ${W}`, (await val(p, '[data-datediff] [data-value]')) === '47 ngày 9 giờ 30 phút' && (await p.locator('[data-include]').isDisabled()), await val(p, '[data-datediff] [data-value]'));
   await p.close();
 
   p = await page(1280, '/tao-qr-chuyen-khoan/');
@@ -242,19 +277,28 @@ for (const width of [390, 1280]) {
   const val = (p, sel) => p.locator(sel).first().innerText();
   let p = await page(1280, '/tinh-luong-gross-net/');
   ok(`salary g2n ${W}`, (await val(p, '[data-salary] [data-value]')) === '26.215.000');
+  const row10 = await p.locator('[data-brackets] tr').nth(1).locator('td').allInnerTexts();
+  ok(`salary 10% bracket portion ${W}`, row10.join('|') === '10.000.000 - 30.000.000|10%|1.350.000|135.000', row10.join('|'));
+  ok(`salary total row ${W}`, (await p.locator('[data-brackets] tr').last().locator('td').allInnerTexts()).join('|') === 'Tổng cộng||11.350.000|635.000');
+  ok(`salary formula ${W}`, (await val(p, '[data-taxable-formula]')).endsWith('= 11.350.000') && (await p.locator('[data-salary] [data-quip]').isVisible()));
   await p.locator('label:has([value="n2g"])').click();
   await p.locator('[data-amount]').fill('26.215.000');
   ok(`salary n2g ${W}`, (await val(p, '[data-salary] [data-value]')) === '30.000.000');
   await p.close();
 
   p = await page(1280, '/doi-ngay-am-duong/');
-  await p.locator('[data-solar]').fill('2026-02-17');
+  await p.locator('[data-solar]').fill('17/02/2026');
   ok(`lunar tet 2026 ${W}`, (await val(p, '[data-lunar] [data-value]')) === 'Ngày 1 tháng 1 năm 2026' && (await val(p, '[data-cc-year]')) === 'Bính Ngọ');
+  ok(`lunar solar dd/mm/yyyy ${W}`, (await val(p, '[data-lunar] [data-sub]')) === 'Thứ ba, 17/02/2026', await val(p, '[data-lunar] [data-sub]'));
+  ok(`lunar good hours ${W}`, (await p.locator('[data-good-hours] li').count()) === 6 && !(await p.locator('[data-hour-stat]').isVisible()));
+  await p.locator('[data-time]').fill('23:30');
+  ok(`lunar hour can chi ${W}`, (await p.locator('[data-hour-stat]').isVisible()) && (await val(p, '[data-cc-hour]')).endsWith('Tý'), await val(p, '[data-cc-hour]'));
+  ok(`lunar tet countdown ${W}`, (await p.locator('[data-lunar] [data-ticker]').isVisible()) && (await val(p, '[data-lunar] [data-ticker-label]')).includes('Tết'));
   await p.locator('label:has([value="l2s"])').click();
   await p.locator('[data-lday]').fill('1');
   await p.locator('[data-lmonth]').fill('1');
   await p.locator('[data-lyear]').fill('2030');
-  ok(`lunar tet 2030 vn ${W}`, (await val(p, '[data-lunar] [data-value]')).includes('2/2/2030') || (await val(p, '[data-lunar] [data-value]')).includes('2 tháng 2'), await val(p, '[data-lunar] [data-value]'));
+  ok(`lunar tet 2030 vn ${W}`, (await val(p, '[data-lunar] [data-value]')) === 'Thứ bảy, 02/02/2030', await val(p, '[data-lunar] [data-value]'));
   await p.locator('[data-lmonth]').fill('3');
   await p.locator('[data-lyear]').fill('2026');
   await p.locator('[data-leap]').check();

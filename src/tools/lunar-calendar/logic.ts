@@ -2,7 +2,7 @@
  * Vietnamese lunisolar calendar (UTC+7), after Hồ Ngọc Đức's published algorithm
  * (astronomical new moons and solar longitude, Jean Meeus). Valid roughly 1900–2100.
  */
-import type { Ymd } from '../age/logic';
+import { addDays, type Ymd } from '../../lib/date';
 
 export interface LunarDate {
   day: number;
@@ -191,4 +191,43 @@ export function canChiMonth(month: number, lunarYear: number): string {
 export function canChiDay(solar: Ymd): string {
   const jd = jdFromDate(solar);
   return `${CAN[(jd + 9) % 10]} ${CHI[(jd + 1) % 12]}`;
+}
+
+/** Index 0–11 (Tý … Hợi) of the two-hour "giờ" containing hour `h` (0–23). Giờ Tý runs 23:00–00:59. */
+export function hourBranch(h: number): number {
+  return Math.floor(((h + 1) % 24) / 2);
+}
+
+/** Can Chi of the hour. From 23:00 the Tý hour already belongs to the next day's stem cycle. */
+export function canChiHour(solar: Ymd, h: number): string {
+  const branch = hourBranch(h);
+  const day = h >= 23 ? addDays(solar, 1) : solar;
+  const dayStem = (jdFromDate(day) + 9) % 10;
+  return `${CAN[((dayStem % 5) * 2 + branch) % 10]} ${CHI[branch]}`;
+}
+
+/** Hoàng đạo (auspicious) hours by the day's branch, as in Hồ Ngọc Đức's amlich tables. */
+const HOANG_DAO = ['110100101100', '001101001011', '110011010010', '101100110100', '001011001101', '010010110011'];
+
+export interface BranchHour {
+  branch: number;
+  name: string;
+  /** "23:00 - 00:59" style range. */
+  range: string;
+}
+
+const hourRange = (branch: number) => {
+  const start = (branch * 2 + 23) % 24;
+  return `${String(start).padStart(2, '0')}:00 - ${String((start + 1) % 24).padStart(2, '0')}:59`;
+};
+
+export function auspiciousHours(solar: Ymd): BranchHour[] {
+  const pattern = HOANG_DAO[((jdFromDate(solar) + 1) % 12) % 6]!;
+  return [...pattern].flatMap((bit, branch) => (bit === '1' ? [{ branch, name: CHI[branch]!, range: hourRange(branch) }] : []));
+}
+
+/** Solar date of the first Tết (lunar 1/1) strictly after `solar`. */
+export function nextTet(solar: Ymd): Ymd {
+  const { year } = solarToLunar(solar);
+  return lunarToSolar({ day: 1, month: 1, year: year + 1, leap: false })!;
 }

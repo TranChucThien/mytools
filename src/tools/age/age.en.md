@@ -12,6 +12,8 @@ faq:
     a: "Yes. Along with your age, you see the weekday you were born on and how many days are left until your next birthday."
   - q: "Is my date of birth stored anywhere?"
     a: "No. Everything is calculated in your browser and your date of birth is never sent to a server."
+  - q: "Can it count my age down to the hour and second?"
+    a: "Yes. Add your time of birth (optional), for example 07:30. Leave the At time field empty with today as the date and the counter below shows the days, hours, minutes and seconds you have lived, live. Born at 07:30 on August 15, 1995, you are 31 years 1 month 23 days 2 h 15 min old at 09:45 on October 8, 2026."
 ---
 
 ## How to use the age calculator

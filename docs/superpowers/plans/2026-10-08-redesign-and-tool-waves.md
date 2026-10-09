@@ -34,12 +34,13 @@
 - [x] Rewrite `global.css` → `tokens.css` + `base.css` + `components.css`; restyle header (sticky), footer, tool card, inputs, buttons, result panel, FAQ, related tiles.
 - [x] Home: split hero (headline + subtext left, live mini percentage tool right = real component preview, not a fake screenshot); tool directory grouped by category with client-side search filter.
 - [x] Remove `–`/`—` from all visible copy (titles, metas, content).
-- [x] Generalize converter to affine pairs `y = a·x + b` (enables °C↔°F) and a units hub page later.
+- [x] Generalize converter to affine pairs `y = a·x + b` (enables °C↔°F).
+- [ ] Units hub page (deferred: not built yet).
 - [x] Gate + screenshots light/dark × 390/1280; commit.
 
 ## Phase 2: Wave 1 (fast, reuse templates)
 
-- [x] Converter pairs: cm↔inch, m↔feet, km↔miles, g↔oz, lít↔gallon (US), MB↔GB (decimal, note binary), km/h↔mph, °C↔°F, m²↔ft², ha↔m².
+- [x] Converter pairs: cm↔inch, m↔feet, km↔miles, g↔oz, lít↔gallon (US), MB↔GB (built as 1 GB = 1024 MB like Windows/RAM, with a note on the 1000-based drive convention), km/h↔mph, °C↔°F, m²↔ft², ha↔m².
 - [x] Calculators: tính tuổi, tính giảm giá, BMI, VAT (thêm/tách 8%/10%).
 - [x] Text: đếm từ/ký tự, bỏ dấu tiếng Việt, chuyển hoa/thường, tạo slug.
 - [x] Random/generator: tung đồng xu, bốc thăm tên, tạo mật khẩu.
@@ -55,5 +56,5 @@
 
 ## Status (2026-10-09)
 
-All four phases implemented. 94 indexable pages (47 tools × 2 languages incl. 22 converter pages), 210 unit tests, 87 e2e checks, verify-dist clean at `/` and `/mytools/`.
+All four phases implemented except the deferred units hub page. 94 indexable pages: 46 tools (24 + 22 converter pages) plus home, in 2 languages, 210 unit tests, 87 e2e checks, verify-dist clean at `/` and `/mytools/`.
 Salary rules verified against published legal sources on 2026-10-08 (see `src/tools/salary/rules.ts`). Lunar calendar validated against Vietnamese Tết dates 2020-2030 (2030 differs from China by one day) and a 21-year round trip.

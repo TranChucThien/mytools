@@ -3,7 +3,7 @@ export const vi = {
   siteTagline: 'Công cụ online miễn phí: nhanh, không cần đăng ký',
   homeTitle: 'Công Cụ Miễn Phí - Công cụ online miễn phí, không cần đăng ký',
   homeDescription:
-    'Bộ công cụ online miễn phí: tính phần trăm, đổi đơn vị, tạo số ngẫu nhiên, tạo mã QR. Chạy ngay trên trình duyệt, không cần đăng ký, không quảng cáo phiền.',
+    'Hơn 50 công cụ online miễn phí: tính lương Gross Net, lãi vay, phần trăm, đổi ngày âm dương, đổi đơn vị, tạo mã QR chuyển khoản, nén ảnh. Không cần đăng ký.',
   homeH1: 'Công cụ online miễn phí',
   homeIntro:
     'Các công cụ nhỏ cho việc hằng ngày. Mở ra là dùng được ngay, chạy trên trình duyệt của bạn, không cần tài khoản.',

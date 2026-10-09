@@ -1,0 +1,117 @@
+---
+import type { Lang, ToolMeta } from '../../lib/types';
+import { S } from './strings';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+const { lang } = Astro.props;
+const s = S[lang];
+---
+
+<section class="tool" data-salary data-config={JSON.stringify({ lang, s })}>
+  <div class="segmented" role="radiogroup" aria-label={s.g2n}>
+    <label><input type="radio" name="sal-mode" value="g2n" checked data-mode /><span>{s.g2n}</span></label>
+    <label><input type="radio" name="sal-mode" value="n2g" data-mode /><span>{s.n2g}</span></label>
+  </div>
+  <div class="grid" style="margin-top:16px">
+    <div class="field">
+      <label for="sal-amount" data-amount-label>{s.gross}</label>
+      <input id="sal-amount" type="text" inputmode="numeric" value={s.example} data-amount />
+    </div>
+    <div class="field">
+      <label for="sal-dep">{s.dependents}</label>
+      <input id="sal-dep" type="text" inputmode="numeric" value="0" data-dependents />
+    </div>
+    <div class="field">
+      <label for="sal-region">{s.region}</label>
+      <select id="sal-region" data-region>
+        <option value="1">I</option>
+        <option value="2">II</option>
+        <option value="3">III</option>
+        <option value="4">IV</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="sal-ins">{s.insuranceSalary}</label>
+      <input id="sal-ins" type="text" inputmode="numeric" placeholder={s.insuranceHint} data-insurance />
+    </div>
+  </div>
+  <div class="result" aria-live="polite">
+    <span class="result-value result-big" data-value></span>
+    <span class="result-formula" data-value-label>{s.net}</span>
+  </div>
+  <p class="error" data-error></p>
+  <dl class="stats">
+    <div><dt>{s.bhxh}</dt><dd data-bhxh>-</dd></div>
+    <div><dt>{s.bhyt}</dt><dd data-bhyt>-</dd></div>
+    <div><dt>{s.bhtn}</dt><dd data-bhtn>-</dd></div>
+    <div><dt>{s.deductions}</dt><dd data-deductions>-</dd></div>
+    <div><dt>{s.taxable}</dt><dd data-taxable>-</dd></div>
+    <div><dt>{s.tax}</dt><dd data-tax>-</dd></div>
+  </dl>
+  <div class="prose" style="max-width:none">
+    <table>
+      <thead><tr><th scope="col">{s.bracket}</th><th scope="col">%</th><th scope="col">{s.tax}</th></tr></thead>
+      <tbody data-brackets></tbody>
+    </table>
+  </div>
+  <p class="hint">{s.asOf}</p>
+</section>
+
+<script>
+  import { $, readConfig } from '../../lib/client';
+  import { formatNumber, parseNumber } from '../../lib/number';
+  import type { Lang } from '../../lib/types';
+  import { grossToNet, netToGross } from './logic';
+  import type { Region } from './rules';
+  import type { SalaryStrings } from './strings';
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-salary]')) {
+    const { lang, s } = readConfig<{ lang: Lang; s: SalaryStrings }>(root);
+    const f = (n: number) => formatNumber(n, lang, 0);
+    const set = (sel: string, text: string) => ($(root, sel).textContent = text);
+    const update = () => {
+      const g2n = root.querySelector<HTMLInputElement>('[data-mode]:checked')!.value === 'g2n';
+      set('[data-amount-label]', g2n ? s.gross : s.net);
+      set('[data-value-label]', g2n ? s.net : s.gross);
+      const amount = parseNumber($<HTMLInputElement>(root, '[data-amount]').value, lang);
+      const dependents = parseNumber($<HTMLInputElement>(root, '[data-dependents]').value || '0', lang);
+      const insText = $<HTMLInputElement>(root, '[data-insurance]').value.trim();
+      const insuranceSalary = insText ? (parseNumber(insText, lang) ?? NaN) : undefined;
+      const region = Number($<HTMLSelectElement>(root, '[data-region]').value) as Region;
+      const ok =
+        amount !== null && amount > 0 && dependents !== null && Number.isInteger(dependents) && dependents >= 0 && dependents <= 20 &&
+        (insuranceSalary === undefined || insuranceSalary >= 0);
+      const tbody = $(root, '[data-brackets]');
+      if (!ok) {
+        for (const sel of ['[data-value]', '[data-bhxh]', '[data-bhyt]', '[data-bhtn]', '[data-deductions]', '[data-taxable]', '[data-tax]']) set(sel, '-');
+        set('[data-error]', s.errInput);
+        tbody.replaceChildren();
+        return;
+      }
+      const opts = { dependents: dependents!, region, insuranceSalary };
+      const r = g2n ? grossToNet({ gross: amount!, ...opts }) : netToGross({ net: amount!, ...opts });
+      set('[data-error]', '');
+      set('[data-value]', f(g2n ? r.net : r.gross));
+      set('[data-bhxh]', f(r.bhxh));
+      set('[data-bhyt]', f(r.bhyt));
+      set('[data-bhtn]', f(r.bhtn));
+      set('[data-deductions]', f(r.deductions));
+      set('[data-taxable]', f(r.taxable));
+      set('[data-tax]', f(r.tax));
+      tbody.replaceChildren(
+        ...r.byBracket.map((b) => {
+          const tr = document.createElement('tr');
+          const range = b.to === Infinity ? `> ${f(b.from)}` : `${f(b.from)} - ${f(b.to)}`;
+          for (const v of [range, `${formatNumber(b.rate * 100, lang)}%`, f(b.tax)]) tr.append(Object.assign(document.createElement('td'), { textContent: v }));
+          return tr;
+        }),
+      );
+    };
+    root.addEventListener('input', update);
+    root.addEventListener('change', update);
+    update();
+  }
+</script>

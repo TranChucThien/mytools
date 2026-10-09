@@ -21,6 +21,9 @@ import SavingsInterest from './savings-interest/Tool.astro';
 import TeamGenerator from './team-generator/Tool.astro';
 import VietQr from './vietqr/Tool.astro';
 import Wheel from './wheel/Tool.astro';
+import ImageCompressor from './image-compressor/Tool.astro';
+import LunarCalendar from './lunar-calendar/Tool.astro';
+import Salary from './salary/Tool.astro';
 import WordCounter from './word-counter/Tool.astro';
 
 type AstroComponent = typeof Percentage;
@@ -49,6 +52,9 @@ export const TOOL_COMPONENTS: Record<ToolComponent, AstroComponent> = {
   vietqr: VietQr,
   wheel: Wheel,
   'team-generator': TeamGenerator,
+  salary: Salary,
+  'lunar-calendar': LunarCalendar,
+  'image-compressor': ImageCompressor,
 };
 
 /** Generated article for tools whose pages have no hand-written Markdown. */

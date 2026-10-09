@@ -1,0 +1,109 @@
+---
+import type { Lang, ToolMeta } from '../../lib/types';
+import { S } from './strings';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+const { lang } = Astro.props;
+const s = S[lang];
+---
+
+<section class="tool" data-lunar data-config={JSON.stringify({ lang, s })}>
+  <div class="segmented" role="radiogroup" aria-label={s.s2l}>
+    <label><input type="radio" name="lc-mode" value="s2l" checked data-mode /><span>{s.s2l}</span></label>
+    <label><input type="radio" name="lc-mode" value="l2s" data-mode /><span>{s.l2s}</span></label>
+  </div>
+  <div class="grid" style="margin-top:16px" data-solar-fields>
+    <div class="field">
+      <label for="lc-solar">{s.solar}</label>
+      <input id="lc-solar" type="date" min="1901-01-01" max="2099-12-31" data-solar />
+    </div>
+  </div>
+  <div data-lunar-fields hidden>
+    <div class="grid" style="margin-top:16px">
+      <div class="field">
+        <label for="lc-day">{s.lday}</label>
+        <input id="lc-day" type="text" inputmode="numeric" value="15" data-lday />
+      </div>
+      <div class="field">
+        <label for="lc-month">{s.lmonth}</label>
+        <input id="lc-month" type="text" inputmode="numeric" value="8" data-lmonth />
+      </div>
+      <div class="field">
+        <label for="lc-year">{s.lyear}</label>
+        <input id="lc-year" type="text" inputmode="numeric" data-lyear />
+      </div>
+    </div>
+    <label class="check"><input type="checkbox" data-leap /> {s.leap}</label>
+  </div>
+  <div class="result" aria-live="polite">
+    <span class="result-value" data-value></span>
+    <span class="result-formula" data-sub></span>
+  </div>
+  <p class="error" data-error></p>
+  <dl class="stats">
+    <div><dt>{s.canChi} · {s.year}</dt><dd data-cc-year>-</dd></div>
+    <div><dt>{s.canChi} · {s.month}</dt><dd data-cc-month>-</dd></div>
+    <div><dt>{s.canChi} · {s.day}</dt><dd data-cc-day>-</dd></div>
+  </dl>
+</section>
+
+<script>
+  import { $, readConfig } from '../../lib/client';
+  import type { Lang } from '../../lib/types';
+  import { parseIsoDate, type Ymd } from '../age/logic';
+  import { canChiDay, canChiMonth, canChiYear, lunarToSolar, solarToLunar, type LunarDate } from './logic';
+  import type { LunarStrings } from './strings';
+
+  const LOCALE = { vi: 'vi-VN', en: 'en-US' } as const;
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-lunar]')) {
+    const { lang, s } = readConfig<{ lang: Lang; s: LunarStrings }>(root);
+    const set = (sel: string, text: string) => ($(root, sel).textContent = text);
+    const solarIn = $<HTMLInputElement>(root, '[data-solar]');
+    const now = new Date();
+    solarIn.value = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    $<HTMLInputElement>(root, '[data-lyear]').value = String(now.getFullYear());
+
+    const lunarText = (l: LunarDate) =>
+      s.lunarFmt.replace('{d}', String(l.day)).replace('{m}', String(l.month)).replace('{leap}', l.leap ? ` ${s.leapLabel}`.replace('  ', ' ') : '').replace('{y}', String(l.year));
+    const solarText = (d: Ymd) =>
+      new Intl.DateTimeFormat(LOCALE[lang], { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' }).format(Date.UTC(d.y, d.m - 1, d.d));
+    const show = (solar: Ymd, lunar: LunarDate, main: string, sub: string) => {
+      set('[data-error]', '');
+      set('[data-value]', main);
+      set('[data-sub]', sub);
+      set('[data-cc-year]', canChiYear(lunar.year));
+      set('[data-cc-month]', canChiMonth(lunar.month, lunar.year));
+      set('[data-cc-day]', canChiDay(solar));
+    };
+    const fail = (msg: string) => {
+      for (const sel of ['[data-value]', '[data-cc-year]', '[data-cc-month]', '[data-cc-day]']) set(sel, '-');
+      set('[data-sub]', '');
+      set('[data-error]', msg);
+    };
+
+    const update = () => {
+      const s2l = root.querySelector<HTMLInputElement>('[data-mode]:checked')!.value === 's2l';
+      $(root, '[data-solar-fields]').hidden = !s2l;
+      $(root, '[data-lunar-fields]').hidden = s2l;
+      if (s2l) {
+        const solar = parseIsoDate(solarIn.value);
+        if (!solar || solar.y < 1901 || solar.y > 2099) return fail(s.errDate);
+        const lunar = solarToLunar(solar);
+        return show(solar, lunar, lunarText(lunar), solarText(solar));
+      }
+      const num = (sel: string) => Number($<HTMLInputElement>(root, sel).value.trim());
+      const lunar = { day: num('[data-lday]'), month: num('[data-lmonth]'), year: num('[data-lyear]'), leap: $<HTMLInputElement>(root, '[data-leap]').checked };
+      if (!(lunar.year >= 1901 && lunar.year <= 2099)) return fail(s.errDate);
+      const solar = lunarToSolar(lunar);
+      if (!solar) return fail(s.errLunar);
+      show(solar, lunar, solarText(solar), lunarText(lunar));
+    };
+    root.addEventListener('input', update);
+    root.addEventListener('change', update);
+    update();
+  }
+</script>

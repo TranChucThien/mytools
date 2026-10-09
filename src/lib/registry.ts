@@ -4,7 +4,9 @@ import { meta as caseConverter } from '../tools/case-converter/meta';
 import { meta as coinFlip } from '../tools/coin-flip/meta';
 import { meta as dateDifference } from '../tools/date-difference/meta';
 import { meta as discount } from '../tools/discount/meta';
+import { meta as imageCompressor } from '../tools/image-compressor/meta';
 import { meta as loan } from '../tools/loan/meta';
+import { meta as lunarCalendar } from '../tools/lunar-calendar/meta';
 import { meta as namePicker } from '../tools/name-picker/meta';
 import { meta as numberToWords } from '../tools/number-to-words/meta';
 import { meta as password } from '../tools/password/meta';
@@ -12,6 +14,7 @@ import { meta as percentage } from '../tools/percentage/meta';
 import { meta as qrCode } from '../tools/qr-code/meta';
 import { meta as randomNumber } from '../tools/random-number/meta';
 import { meta as removeDiacritics } from '../tools/remove-diacritics/meta';
+import { meta as salary } from '../tools/salary/meta';
 import { meta as savingsInterest } from '../tools/savings-interest/meta';
 import { meta as slug } from '../tools/slug/meta';
 import { meta as teamGenerator } from '../tools/team-generator/meta';
@@ -25,6 +28,7 @@ import { LANGS, type Lang, type ToolMeta } from './types';
 
 /** Every tool page on the site. Add a tool by importing its meta here. */
 export const TOOLS: ToolMeta[] = [
+  salary,
   percentage,
   age,
   discount,
@@ -33,6 +37,7 @@ export const TOOLS: ToolMeta[] = [
   savingsInterest,
   loan,
   dateDifference,
+  lunarCalendar,
   ...converters,
   wordCounter,
   removeDiacritics,
@@ -47,6 +52,7 @@ export const TOOLS: ToolMeta[] = [
   qrCode,
   vietqr,
   password,
+  imageCompressor,
 ];
 
 export function getTool(id: string, tools: ToolMeta[] = TOOLS): ToolMeta | undefined {

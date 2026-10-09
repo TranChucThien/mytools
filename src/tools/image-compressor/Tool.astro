@@ -1,0 +1,163 @@
+---
+import type { Lang, ToolMeta } from '../../lib/types';
+import { S } from './strings';
+
+interface Props {
+  lang: Lang;
+  tool: ToolMeta;
+}
+const { lang } = Astro.props;
+const s = S[lang];
+---
+
+<section class="tool" data-imgc data-config={JSON.stringify({ lang, s })}>
+  <div class="field">
+    <label for="ic-files">{s.choose}</label>
+    <input id="ic-files" type="file" accept="image/jpeg,image/png,image/webp" multiple data-files class="file-input" />
+  </div>
+  <div class="grid" style="margin-top:16px">
+    <div class="field">
+      <label for="ic-quality">{s.quality}: <span data-q-label>80</span></label>
+      <input id="ic-quality" type="range" min="10" max="100" value="80" data-quality />
+    </div>
+    <div class="field">
+      <label for="ic-width">{s.maxWidth}</label>
+      <input id="ic-width" type="text" inputmode="numeric" placeholder={s.maxWidthHint} data-width />
+    </div>
+    <div class="field">
+      <span class="label" id="ic-format">{s.format}</span>
+      <div class="segmented" role="radiogroup" aria-labelledby="ic-format">
+        <label><input type="radio" name="ic-format" value="jpeg" checked data-format /><span>JPEG</span></label>
+        <label><input type="radio" name="ic-format" value="webp" data-format /><span>WebP</span></label>
+        <label><input type="radio" name="ic-format" value="png" data-format /><span>PNG</span></label>
+      </div>
+    </div>
+  </div>
+  <p class="empty" style="margin-top:16px" data-empty>{s.empty}</p>
+  <ul class="img-list" data-list></ul>
+</section>
+
+<style>
+  .file-input {
+    padding: 10px;
+    border: 1.5px dashed var(--field-border);
+    border-radius: var(--r-field);
+    background: var(--surface);
+    font: inherit;
+    color: var(--ink);
+    min-height: 56px;
+    width: 100%;
+  }
+  .img-list {
+    list-style: none;
+    padding: 0;
+    margin: 16px 0 0;
+    display: grid;
+    gap: 10px;
+  }
+  .img-list li {
+    display: grid;
+    grid-template-columns: 64px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    padding: 10px;
+    border-radius: 14px;
+    background: var(--surface-2);
+  }
+  .img-list img {
+    width: 64px;
+    height: 64px;
+    object-fit: cover;
+    border-radius: 10px;
+    background: var(--surface);
+  }
+  .img-list .meta {
+    min-width: 0;
+    font-size: 0.875rem;
+  }
+  .img-list .meta strong {
+    display: block;
+    color: var(--ink);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+</style>
+
+<script>
+  import { $, debounce, readConfig } from '../../lib/client';
+  import { formatNumber, parseNumber } from '../../lib/number';
+  import type { Lang } from '../../lib/types';
+  import { fitSize, outputName, savedPercent, type ImageFormat } from './logic';
+  import type { ImageStrings } from './strings';
+
+  const kb = (bytes: number, lang: Lang) =>
+    bytes >= 1024 * 1024 ? `${formatNumber(bytes / 1024 / 1024, lang, 2)} MB` : `${formatNumber(bytes / 1024, lang, 0)} KB`;
+
+  for (const root of document.querySelectorAll<HTMLElement>('[data-imgc]')) {
+    const { lang, s } = readConfig<{ lang: Lang; s: ImageStrings }>(root);
+    const filesIn = $<HTMLInputElement>(root, '[data-files]');
+    const list = $(root, '[data-list]');
+    const urls: string[] = [];
+
+    const compress = async (file: File, format: ImageFormat, quality: number, maxWidth?: number) => {
+      const bitmap = await createImageBitmap(file);
+      const { width, height } = fitSize(bitmap.width, bitmap.height, maxWidth);
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d')!;
+      if (format === 'jpeg') {
+        // JPEG has no transparency: paint white behind transparent pixels.
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, width, height);
+      }
+      ctx.drawImage(bitmap, 0, 0, width, height);
+      bitmap.close();
+      const blob = await new Promise<Blob | null>((ok) => canvas.toBlob(ok, `image/${format}`, quality / 100));
+      if (!blob) throw new Error('encode failed');
+      return { blob, width, height };
+    };
+
+    const run = async () => {
+      const files = [...(filesIn.files ?? [])];
+      $(root, '[data-empty]').hidden = files.length > 0;
+      urls.splice(0).forEach((u) => URL.revokeObjectURL(u));
+      const format = root.querySelector<HTMLInputElement>('[data-format]:checked')!.value as ImageFormat;
+      const quality = Number($<HTMLInputElement>(root, '[data-quality]').value);
+      $(root, '[data-q-label]').textContent = String(quality);
+      const maxWidth = parseNumber($<HTMLInputElement>(root, '[data-width]').value, lang) ?? undefined;
+      const items = await Promise.all(
+        files.map(async (file) => {
+          const li = document.createElement('li');
+          try {
+            const { blob, width, height } = await compress(file, format, quality, maxWidth);
+            const url = URL.createObjectURL(blob);
+            urls.push(url);
+            const pct = savedPercent(file.size, blob.size);
+            const note = pct >= 0 ? `${pct}% ${s.saved}` : `${-pct}% ${s.larger}`;
+            li.innerHTML = `<img alt="" /><div class="meta"><strong></strong><span></span></div><a class="btn btn-sm" download></a>`;
+            li.querySelector('img')!.src = url;
+            li.querySelector('strong')!.textContent = file.name;
+            li.querySelector('span')!.textContent = `${s.before} ${kb(file.size, lang)} → ${s.after} ${kb(blob.size, lang)} (${width}×${height}), ${note}`;
+            const a = li.querySelector('a')!;
+            a.href = url;
+            a.download = outputName(file.name, format);
+            a.textContent = s.download;
+            li.dataset.saved = String(pct);
+          } catch {
+            li.textContent = `${file.name}: ${s.errRead}`;
+            li.classList.add('error');
+          }
+          return li;
+        }),
+      );
+      list.replaceChildren(...items);
+    };
+
+    filesIn.addEventListener('change', run);
+    const rerun = debounce(run, 250);
+    for (const sel of ['[data-quality]', '[data-width]']) $(root, sel).addEventListener('input', rerun);
+    root.querySelectorAll('[data-format]').forEach((el) => el.addEventListener('change', run));
+  }
+</script>

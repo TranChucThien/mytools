@@ -236,6 +236,41 @@ for (const width of [390, 1280]) {
   await p.close();
 }
 
+// ---------- Wave 3 tools (desktop) ----------
+{
+  const W = '@1280';
+  const val = (p, sel) => p.locator(sel).first().innerText();
+  let p = await page(1280, '/tinh-luong-gross-net/');
+  ok(`salary g2n ${W}`, (await val(p, '[data-salary] [data-value]')) === '26.215.000');
+  await p.locator('label:has([value="n2g"])').click();
+  await p.locator('[data-amount]').fill('26.215.000');
+  ok(`salary n2g ${W}`, (await val(p, '[data-salary] [data-value]')) === '30.000.000');
+  await p.close();
+
+  p = await page(1280, '/doi-ngay-am-duong/');
+  await p.locator('[data-solar]').fill('2026-02-17');
+  ok(`lunar tet 2026 ${W}`, (await val(p, '[data-lunar] [data-value]')) === 'Ngày 1 tháng 1 năm 2026' && (await val(p, '[data-cc-year]')) === 'Bính Ngọ');
+  await p.locator('label:has([value="l2s"])').click();
+  await p.locator('[data-lday]').fill('1');
+  await p.locator('[data-lmonth]').fill('1');
+  await p.locator('[data-lyear]').fill('2030');
+  ok(`lunar tet 2030 vn ${W}`, (await val(p, '[data-lunar] [data-value]')).includes('2/2/2030') || (await val(p, '[data-lunar] [data-value]')).includes('2 tháng 2'), await val(p, '[data-lunar] [data-value]'));
+  await p.locator('[data-lmonth]').fill('3');
+  await p.locator('[data-lyear]').fill('2026');
+  await p.locator('[data-leap]').check();
+  ok(`lunar missing leap ${W}`, (await val(p, '[data-lunar] [data-error]')).length > 0);
+  await p.close();
+
+  p = await page(1280, '/en/image-compressor/');
+  await p.locator('[data-files]').setInputFiles(new URL('../public/og-default.png', import.meta.url).pathname);
+  await p.locator('.img-list a[download]').waitFor({ timeout: 10000 });
+  ok(`image compress ${W}`, (await p.locator('.img-list a[download]').getAttribute('download')) === 'og-default-compressed.jpg');
+  await p.locator('[data-width]').fill('600');
+  await p.waitForTimeout(800);
+  ok(`image resize ${W}`, (await val(p, '.img-list .meta span')).includes('600×315'), await val(p, '.img-list .meta span'));
+  await p.close();
+}
+
 // ---------- Sweep every sitemap page on mobile ----------
 {
   const ctx = await b.newContext({ viewport: { width: 390, height: 844 } });

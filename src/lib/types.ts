@@ -38,7 +38,10 @@ export type ToolComponent =
   | 'date-difference'
   | 'vietqr'
   | 'wheel'
-  | 'team-generator';
+  | 'team-generator'
+  | 'salary'
+  | 'lunar-calendar'
+  | 'image-compressor';
 
 export interface ToolMeta {
   /** Stable internal id, e.g. 'percentage', 'kg-to-lbs'. Also the content file key. */

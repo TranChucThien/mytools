@@ -1,6 +1,6 @@
 # Redesign + Tool Waves Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans. Steps use checkbox (`- [ ]`) syntax.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:executing-plans. Steps use checkbox (`- [x]`) syntax.
 
 **Goal:** Give the site its own design system (via the `design-taste-frontend` + `awesome-design` skills), restructure the code so tools scale to 50+, then ship the tool backlog in three waves.
 
@@ -27,28 +27,33 @@
 
 ## Phase 1: Design system + scale refactor
 
-- [ ] `DESIGN.md` at repo root: design read, dials, tokens, components, do/don't.
-- [ ] Self-host **Be Vietnam Pro** (`@fontsource/be-vietnam-pro`, weights 400/500/600/800; designed for Vietnamese diacritics).
-- [ ] `@tabler/icons` + `Icon.astro` (inline raw SVG by name). Replace the hand-drawn logo/check marks.
-- [ ] `ToolMeta.icon` (Tabler name) for cards, category headers, related tools.
-- [ ] Rewrite `global.css` → `tokens.css` + `base.css` + `components.css`; restyle header (sticky), footer, tool card, inputs, buttons, result panel, FAQ, related tiles.
-- [ ] Home: split hero (headline + subtext left, live mini percentage tool right = real component preview, not a fake screenshot); tool directory grouped by category with client-side search filter.
-- [ ] Remove `–`/`—` from all visible copy (titles, metas, content).
-- [ ] Generalize converter to affine pairs `y = a·x + b` (enables °C↔°F) and a units hub page later.
-- [ ] Gate + screenshots light/dark × 390/1280; commit.
+- [x] `DESIGN.md` at repo root: design read, dials, tokens, components, do/don't.
+- [x] Self-host **Be Vietnam Pro** (`@fontsource/be-vietnam-pro`, weights 400/500/600/800; designed for Vietnamese diacritics).
+- [x] `@tabler/icons` + `Icon.astro` (inline raw SVG by name). Replace the hand-drawn logo/check marks.
+- [x] `ToolMeta.icon` (Tabler name) for cards, category headers, related tools.
+- [x] Rewrite `global.css` → `tokens.css` + `base.css` + `components.css`; restyle header (sticky), footer, tool card, inputs, buttons, result panel, FAQ, related tiles.
+- [x] Home: split hero (headline + subtext left, live mini percentage tool right = real component preview, not a fake screenshot); tool directory grouped by category with client-side search filter.
+- [x] Remove `–`/`—` from all visible copy (titles, metas, content).
+- [x] Generalize converter to affine pairs `y = a·x + b` (enables °C↔°F) and a units hub page later.
+- [x] Gate + screenshots light/dark × 390/1280; commit.
 
 ## Phase 2: Wave 1 (fast, reuse templates)
 
-- [ ] Converter pairs: cm↔inch, m↔feet, km↔miles, g↔oz, lít↔gallon (US), MB↔GB (decimal, note binary), km/h↔mph, °C↔°F, m²↔ft², ha↔m².
-- [ ] Calculators: tính tuổi, tính giảm giá, BMI, VAT (thêm/tách 8%/10%).
-- [ ] Text: đếm từ/ký tự, bỏ dấu tiếng Việt, chuyển hoa/thường, tạo slug.
-- [ ] Random/generator: tung đồng xu, bốc thăm tên, tạo mật khẩu.
-- [ ] Each: logic + tests, meta (icon, related), VI/EN content, e2e smoke. Commit per group.
+- [x] Converter pairs: cm↔inch, m↔feet, km↔miles, g↔oz, lít↔gallon (US), MB↔GB (decimal, note binary), km/h↔mph, °C↔°F, m²↔ft², ha↔m².
+- [x] Calculators: tính tuổi, tính giảm giá, BMI, VAT (thêm/tách 8%/10%).
+- [x] Text: đếm từ/ký tự, bỏ dấu tiếng Việt, chuyển hoa/thường, tạo slug.
+- [x] Random/generator: tung đồng xu, bốc thăm tên, tạo mật khẩu.
+- [x] Each: logic + tests, meta (icon, related), VI/EN content, e2e smoke. Commit per group.
 
 ## Phase 3: Wave 2 (Vietnam-specific)
 
-- [ ] Đọc số thành chữ (VND, hóa đơn), lãi tiết kiệm, lãi vay (dư nợ giảm dần + cố định, lịch trả nợ), VietQR chuyển khoản (EMVCo payload + CRC16, bank BIN list), vòng quay may mắn, chia đội, đếm ngày giữa hai ngày.
+- [x] Đọc số thành chữ (VND, hóa đơn), lãi tiết kiệm, lãi vay (dư nợ giảm dần + cố định, lịch trả nợ), VietQR chuyển khoản (EMVCo payload + CRC16, bank BIN list), vòng quay may mắn, chia đội, đếm ngày giữa hai ngày.
 
 ## Phase 4: Wave 3 (complex)
 
-- [ ] Lương Gross↔Net + thuế TNCN (dated config), âm↔dương lịch (Hồ Ngọc Đức algorithm, tested against known dates), nén/đổi kích thước ảnh (canvas, client-only).
+- [x] Lương Gross↔Net + thuế TNCN (dated config), âm↔dương lịch (Hồ Ngọc Đức algorithm, tested against known dates), nén/đổi kích thước ảnh (canvas, client-only).
+
+## Status (2026-10-09)
+
+All four phases implemented. 94 indexable pages (47 tools × 2 languages incl. 22 converter pages), 210 unit tests, 87 e2e checks, verify-dist clean at `/` and `/mytools/`.
+Salary rules verified against published legal sources on 2026-10-08 (see `src/tools/salary/rules.ts`). Lunar calendar validated against Vietnamese Tết dates 2020-2030 (2030 differs from China by one day) and a 21-year round trip.

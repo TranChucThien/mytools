@@ -5,7 +5,7 @@ export const en: UiStrings = {
   siteTagline: 'Free online tools: fast, no signup',
   homeTitle: 'Free Online Tools - No Signup Required | Công Cụ Miễn Phí',
   homeDescription:
-    'Free online tools: percentage calculator, unit converters, random number generator and QR code generator. Runs in your browser, no signup needed.',
+    '50+ free online tools: salary and loan calculators, unit converters, text tools, QR and password generators, image compressor. Runs in your browser, no signup.',
   homeH1: 'Free Online Tools',
   homeIntro:
     'Small tools for everyday tasks. Open one and it just works, right in your browser, no account needed.',

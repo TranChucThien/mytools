@@ -1,0 +1,31 @@
+export const S = {
+  vi: {
+    choose: 'Chọn ảnh',
+    quality: 'Chất lượng',
+    maxWidth: 'Chiều rộng tối đa (px)',
+    maxWidthHint: 'Để trống để giữ nguyên',
+    format: 'Định dạng',
+    download: 'Tải về',
+    before: 'Gốc',
+    after: 'Sau nén',
+    saved: 'giảm',
+    larger: 'lớn hơn bản gốc, hãy giảm chất lượng hoặc đổi định dạng',
+    errRead: 'Không đọc được ảnh này. Hãy dùng JPG, PNG hoặc WebP.',
+    empty: 'Chưa có ảnh nào. Chọn một hoặc nhiều ảnh để bắt đầu.',
+  },
+  en: {
+    choose: 'Choose images',
+    quality: 'Quality',
+    maxWidth: 'Max width (px)',
+    maxWidthHint: 'Leave empty to keep size',
+    format: 'Format',
+    download: 'Download',
+    before: 'Original',
+    after: 'Compressed',
+    saved: 'smaller',
+    larger: 'larger than the original, try lower quality or another format',
+    errRead: 'Could not read this image. Please use JPG, PNG or WebP.',
+    empty: 'No images yet. Choose one or more images to start.',
+  },
+};
+export type ImageStrings = (typeof S)['vi'];
